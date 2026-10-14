@@ -105,6 +105,7 @@ export async function commerce(request: Request, env: Env): Promise<Response> {
       ) ? 1 : 0 }))
       return json({ ...catalog, supportContacts: support.contacts, announcement, plans: offers, mode: live ? 'live' : 'demo', checkoutEnabled: testing || live || email || xgiftCheckoutEnabled(env), testingEnabled: testing }, 200, { 'Server-Timing': `catalog;dur=${(performance.now() - started).toFixed(1)}` })
     }
+    if (path === '/api/orders/verification' && method === 'GET') return json({ enabled: false })
     if (path === '/api/orders/client' && method === 'POST') {
       await body(request)
       const token = readCookie(request, 'buyer') ?? randomToken()
