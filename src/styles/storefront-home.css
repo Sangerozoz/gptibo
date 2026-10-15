@@ -113,6 +113,10 @@
 .store-skeleton-art>span { width:52%; height:104px; border-radius:14px; opacity:.6; }
 .store-skeleton-price { width:25%; height:24px; }
 .store-skeleton-card .store-skeleton-action { width:82px; height:34px; border-radius:22px; }
+@media(max-width:1100px) {
+  .store-intro-platform { height:260px; gap:12px; padding-block:18px; }
+  .store-intro-art { width:min(100%,300px); height:200px; }
+}
 @media(max-width:800px) {
   .store-home { grid-template-columns:1fr; gap:20px; }
   .store-sidebar-label,.store-sidebar-links { display:none; }
@@ -120,17 +124,21 @@
   .store-categories button { font-size:12px; }
   .store-intro-support { display:none; }
   .store-intro { padding-block:30px 22px; }
-  .store-intro-platform { grid-template-columns:1fr; gap:8px; height:auto; padding-block:38px 24px; }
-  .store-intro-art { width:min(100%,470px); height:240px; margin-inline:auto; }
+  .store-intro-platform { grid-template-columns:minmax(0,1fr) minmax(240px,.8fr); height:240px; padding-block:16px; }
+  .store-intro-art { width:min(100%,265px); height:180px; }
   .store-intro-head-rainbow { width:58%; left:21%; top:0; }
+}
+@media(max-width:600px) {
+  .store-intro-platform { grid-template-columns:1fr; height:auto; gap:4px; padding-block:20px 12px; }
+  .store-intro-platform h1 { font-size:clamp(30px,6vw,34px); line-height:1.08; letter-spacing:-1.5px; }
+  .store-intro-platform p { margin-top:10px; font-size:12px; line-height:1.55; }
+  .store-intro-art { width:min(100%,260px); height:155px; }
 }
 @media(max-width:560px) {
   .store-featured,.store-compact-grid { grid-template-columns:1fr; }
   .store-intro h1 span { display:block; margin-left:0; }
-  .store-intro-platform { gap:4px; padding-block:34px 20px; }
-  .store-intro-platform h1 { font-size:clamp(34px,8vw,42px); letter-spacing:-1.7px; }
-  .store-intro-platform p { font-size:12px; }
-  .store-intro-art { width:min(100%,340px); height:188px; }
+  .store-intro-platform { padding-block:18px 12px; }
+  .store-intro-art { width:min(100%,220px); height:128px; }
   .store-intro-head-lightning,.store-intro-head-red { display:none; }
   .store-intro-head-rainbow { width:60%; left:20%; top:0; }
   .store-intro-head-pink { width:34%; right:0; top:0; }
