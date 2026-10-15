@@ -11,6 +11,7 @@ CREATE TABLE direct_site (
   name_en TEXT NOT NULL DEFAULT '',
   logo_media_id TEXT REFERENCES direct_media(id),
   version INTEGER NOT NULL DEFAULT 0,
+  change_id TEXT,
   updated_at INTEGER NOT NULL DEFAULT 0
 );
 INSERT INTO direct_site(id,name_zh,name_en) VALUES (1,'硅基生物','MEGHAN');
@@ -22,6 +23,7 @@ CREATE TABLE direct_categories (
   sort_order INTEGER NOT NULL,
   active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1)),
   version INTEGER NOT NULL DEFAULT 0,
+  change_id TEXT,
   updated_at INTEGER NOT NULL DEFAULT 0
 );
 INSERT INTO direct_categories(id,name_zh,name_en,sort_order) VALUES
@@ -41,6 +43,7 @@ CREATE TABLE direct_products (
   listed INTEGER NOT NULL DEFAULT 1 CHECK(listed IN (0,1)),
   image_media_id TEXT REFERENCES direct_media(id),
   version INTEGER NOT NULL DEFAULT 0,
+  change_id TEXT,
   updated_at INTEGER NOT NULL DEFAULT 0
 );
 INSERT INTO direct_products(id,name_zh,name_en,description_zh,description_en,category_id,sort_order) VALUES
@@ -52,3 +55,10 @@ INSERT INTO direct_products(id,name_zh,name_en,description_zh,description_en,cat
   ('claude','Claude','Claude','套餐待公布','Plans coming soon','ai',5),
   ('grok','Grok','Grok','套餐待公布','Plans coming soon','ai',6),
   ('codex-sms','Codex 接码','Codex SMS','按次服务','Pay per use','tool',7);
+
+CREATE TABLE direct_order_state (
+  kind TEXT PRIMARY KEY CHECK(kind IN ('categories','products')),
+  version INTEGER NOT NULL DEFAULT 0,
+  change_id TEXT
+);
+INSERT INTO direct_order_state(kind) VALUES ('categories'),('products');
