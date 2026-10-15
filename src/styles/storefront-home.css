@@ -8,7 +8,8 @@
 .store-intro-platform { display:grid; grid-template-columns:minmax(0,1fr) minmax(360px,.78fr); gap:18px; height:300px; padding-block:24px; }
 .store-intro-main { position:relative; z-index:1; max-width:620px; }
 .store-intro-platform h1 { font-size:clamp(36px,4.6vw,56px); line-height:1.1; letter-spacing:-2.2px; }
-.store-intro-platform h1 span { color:inherit; margin-left:0; white-space:nowrap; }
+.store-intro-platform h1 span { color:#0071e3; margin-left:0; white-space:nowrap; }
+.dark .store-intro-platform h1 span { color:#5aa9ff; }
 .store-intro-platform p { max-width:610px; margin-top:15px; font-size:14px; line-height:1.7; }
 .store-intro-art { position:relative; isolation:isolate; width:min(100%,350px); height:236px; margin-inline:auto; pointer-events:none; }
 .store-intro-head { position:absolute; display:block; height:auto; aspect-ratio:1; object-fit:contain; filter:drop-shadow(0 14px 14px #00000014); }
