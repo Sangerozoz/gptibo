@@ -7,6 +7,7 @@ ADMIN_TOTP_SECRET= # Configure locally; never commit a real value.
 RESEND_API_KEY= # Configure locally; never commit a real value.
 RESEND_FROM= # Configure locally; never commit a real value.
 PARTNER_AUTH_SECRET= # Configure locally; never commit a real value.
+PARTNER_MODE_ENABLED="false" # Set true only when reopening partner operations.
 
 FEISHU_APP_ID= # Configure locally; never commit a real value.
 FEISHU_APP_SECRET= # Configure locally; never commit a real value.

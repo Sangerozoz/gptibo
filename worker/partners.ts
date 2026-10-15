@@ -18,6 +18,7 @@ import { partnerOrderSummary } from './partner-order-summary.ts'
 
 export async function resolvePartner(env: Env, slug: unknown) {
   if (slug === undefined || slug === null || slug === '') return null
+  if (env.PARTNER_MODE_ENABLED === 'false') throw new ApiError('代理商店暂未开放。', 404)
   if (typeof slug !== 'string' || (!referralCodePattern.test(slug) && !/^[a-z0-9][a-z0-9-]{2,31}$/.test(slug))) throw new ApiError('推广链接无效。', 404)
   const p = await env.INTEREST_DB.prepare('SELECT * FROM partners WHERE slug=? AND active=1').bind(slug).first<Partner>()
   if (!p) throw new ApiError('该代理商店暂不可用，请联系平台支持。', 404)

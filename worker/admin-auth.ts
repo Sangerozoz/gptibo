@@ -29,9 +29,9 @@ async function reserveAttempt(env: Env, key: string, now: number, maximum: numbe
 }
 export async function authRoute(request: Request, env: Env, path: string) {
   if (path === '/api/admin/session' && request.method === 'GET') {
-    if (!configured(env)) return json({ configured: false, authenticated: false, mailReady: mailReady(env) })
-    try { await requireAdmin(request, env); return json({ configured: true, authenticated: true, mailReady: mailReady(env), username: env.ADMIN_USERNAME }) }
-    catch (e) { if (e instanceof ApiError && e.status === 401) return json({ configured: true, authenticated: false, mailReady: mailReady(env) }); throw e }
+    if (!configured(env)) return json({ configured: false, authenticated: false, mailReady: mailReady(env), partnerModeEnabled: env.PARTNER_MODE_ENABLED !== 'false' })
+    try { await requireAdmin(request, env); return json({ configured: true, authenticated: true, mailReady: mailReady(env), username: env.ADMIN_USERNAME, partnerModeEnabled: env.PARTNER_MODE_ENABLED !== 'false' }) }
+    catch (e) { if (e instanceof ApiError && e.status === 401) return json({ configured: true, authenticated: false, mailReady: mailReady(env), partnerModeEnabled: env.PARTNER_MODE_ENABLED !== 'false' }); throw e }
   }
   if (path === '/api/admin/login/email-code' && request.method === 'POST') {
     const data = await body(request), db = env.INTEREST_DB

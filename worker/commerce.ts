@@ -69,6 +69,7 @@ export async function commerce(request: Request, env: Env): Promise<Response> {
     const auth = await authRoute(request, env, path)
     if (auth) return auth
     if (path.startsWith('/api/direct-media/')) return await directMediaRoute(request, env, path)
+    if (env.PARTNER_MODE_ENABLED === 'false' && path.startsWith('/api/partner/')) throw new ApiError('代理服务暂未开放。', 404)
     const partnerLogin = await partnerAuth(request, env, path)
     if (partnerLogin) return partnerLogin
     if (path === '/api/partner/invoices' || path.startsWith('/api/partner/invoices/')) return await invoiceRoutes(request, env, url)
@@ -87,7 +88,10 @@ export async function commerce(request: Request, env: Env): Promise<Response> {
       if (path.startsWith('/api/admin/direct-store/')) return await directStoreAdminRoute(request, env, path)
       if (path.startsWith('/api/admin/payments/test')) return await paymentTesting(request, env, url)
       if (path.startsWith('/api/admin/refunds')) return await adminRefunds(request, env, url)
-      if (path.startsWith('/api/admin/partners') || path.startsWith('/api/admin/partner-payouts')) return await adminPartnerRoutes(request, env, url)
+      if (path.startsWith('/api/admin/partners') || path.startsWith('/api/admin/partner-payouts')) {
+        if (env.PARTNER_MODE_ENABLED === 'false') throw new ApiError('代理服务暂未开放。', 404)
+        return await adminPartnerRoutes(request, env, url)
+      }
       return await admin(request, env, url)
     }
     if (path === '/api/catalog' && method === 'GET') {
@@ -106,7 +110,7 @@ export async function commerce(request: Request, env: Env): Promise<Response> {
       const offers = (catalog.plans as Plan[]).map(plan => ({ ...plan, enabled: plan.enabled && (
         isXGiftPlan(plan.id) ? xgiftCheckoutEnabled(env) : plan.id === 'gmail-account' ? gmail : isDeliverySupplierPlan(plan.id) ? delivery_supplier : emailProduct(plan.id) ? email : testing || (live && Boolean(mapped[plan.id]))
       ) ? 1 : 0 }))
-      return json({ ...catalog, ...(partner ? {} : await publicDirectStore(env)), supportContacts: support.contacts, announcement, plans: offers, mode: live ? 'live' : 'demo', checkoutEnabled: testing || live || email || xgiftCheckoutEnabled(env), testingEnabled: testing }, 200, { 'Server-Timing': `catalog;dur=${(performance.now() - started).toFixed(1)}` })
+      return json({ ...catalog, ...(partner ? {} : await publicDirectStore(env)), supportContacts: support.contacts, announcement, plans: offers, mode: live ? 'live' : 'demo', checkoutEnabled: testing || live || email || xgiftCheckoutEnabled(env), testingEnabled: testing, partnerModeEnabled: env.PARTNER_MODE_ENABLED !== 'false' }, 200, { 'Server-Timing': `catalog;dur=${(performance.now() - started).toFixed(1)}` })
     }
     if (path === '/api/orders/verification' && method === 'GET') return json({ enabled: false })
     if (path === '/api/orders/client' && method === 'POST') {

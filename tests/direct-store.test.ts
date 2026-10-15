@@ -91,3 +91,21 @@ test('image upload is admin-only and public catalog exposes a served URL rather 
   assert.equal(catalog.site.logoUrl, url)
   assert.doesNotMatch(JSON.stringify(catalog), /iVBORw0KGgo/)
 })
+
+test('partner mode can be closed without removing its data or direct orders', async t => {
+  const s = await customerFixture(); t.after(() => s.db.close())
+  const partner = await s.agent('Former partner')
+  const buyer = (await s.request('/api/orders/client', {})).headers.get('Set-Cookie')!.split(';')[0]
+  const existing = await s.request('/api/orders', { email: 'buyer@example.test', plan: 'plus', expectedPrice: 13900, key: crypto.randomUUID() }, buyer)
+  assert.equal(existing.status, 201)
+  s.env.PARTNER_MODE_ENABLED = 'false'
+  assert.equal((await s.request('/api/partner/auth/session')).status, 404)
+  assert.equal((await s.request('/api/catalog?partner=' + partner.id.slice(0, 6))).status, 404)
+  assert.equal((await s.request('/api/admin/partners', {}, s.admin)).status, 404)
+  assert.equal((await s.request('/api/catalog')).status, 200)
+  assert.equal((await (await s.request('/api/orders', undefined, buyer)).json()).orders.length, 1)
+  s.env.PARTNER_MODE_ENABLED = 'true'
+  assert.equal((await s.request('/api/partner/auth/session')).status, 200)
+  assert.equal((await s.request('/api/catalog?partner=' + partner.id.slice(0, 6))).status, 200)
+  assert.equal(s.db.prepare('SELECT COUNT(*) n FROM partners').get()!.n, 1)
+})

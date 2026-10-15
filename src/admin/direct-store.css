@@ -1,0 +1,29 @@
+.direct-admin-form { padding:22px; display:grid; gap:18px; }
+.direct-admin-form>button { justify-self:start; }
+.direct-admin-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.direct-admin-form label,.direct-row-editor label { display:grid; gap:7px; color:var(--foreground); font-size:12px; }
+.direct-admin-form input,.direct-row-editor input { min-width:0; }
+.direct-field-title { font-size:12px; font-weight:500; }
+.direct-image-input { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.direct-image-input>img,.direct-image-placeholder { width:110px; height:80px; object-fit:contain; border:1px solid var(--border); border-radius:10px; background:var(--secondary); }
+.direct-image-placeholder { display:grid; place-items:center; color:var(--muted-foreground); font-size:10px; }
+.direct-upload-button { position:relative; display:inline-flex!important; align-items:center; justify-content:center; cursor:pointer; border:1px solid var(--border); border-radius:8px; padding:9px 13px; }
+.direct-upload-button input { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
+.direct-admin-list { display:grid; }
+.direct-admin-row { padding:18px 22px; border-bottom:1px solid var(--border); }
+.direct-row-heading { display:flex; align-items:center; gap:12px; min-height:38px; }
+.direct-row-heading strong { font-size:13px; font-weight:550; }
+.direct-row-heading>span { color:var(--muted-foreground); font-size:11px; }
+.direct-move { display:flex; align-items:center; gap:7px; margin-left:auto; }
+.direct-move button { height:32px; }
+.direct-move button[aria-label] { width:32px; }
+.direct-row-editor { display:flex; align-items:end; flex-wrap:wrap; gap:12px; margin-top:12px; }
+.direct-row-editor>label { min-width:140px; flex:1; }
+.direct-row-editor .direct-checkbox,.direct-admin-form .direct-checkbox { display:flex; align-items:center; gap:8px; min-height:40px; flex:0 0 auto; }
+.direct-checkbox input { width:16px; height:16px; accent-color:var(--primary); }
+.direct-row-editor>.admin-error { width:100%; margin:0; }
+.direct-list-actions { display:flex; align-items:center; gap:14px; padding:18px 22px; }
+.direct-list-actions .admin-error { margin:0; }
+.direct-create { padding:18px 22px 22px; border-top:1px solid var(--border); }
+.direct-product-editor { padding:18px 0 0; }
+@media(max-width:700px) { .direct-admin-fields { grid-template-columns:1fr; } .direct-row-heading { flex-wrap:wrap; } .direct-move { width:100%; margin-left:0; } }
