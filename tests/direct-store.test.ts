@@ -68,3 +68,26 @@ test('owner product edits and ordering reach the public catalog, and hidden prod
   assert.deepEqual((await (await s.request('/api/catalog')).json()).products.map((item: { id: string }) => item.id), order)
   assert.equal((await s.request(endpoint, { ...product, nameZh: '陈旧更新' }, s.admin)).status, 409)
 })
+
+test('image upload is admin-only and public catalog exposes a served URL rather than embedded bytes', async t => {
+  const s = await customerFixture(); t.after(() => s.db.close())
+  const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/tc8AAAAASUVORK5CYII='
+  const endpoint = '/api/admin/direct-store/media'
+  assert.equal((await s.request(endpoint, { image: png })).status, 401)
+  assert.equal((await s.request(endpoint, { image: 'data:image/png;base64,AAAA' }, s.admin)).status, 400)
+  assert.equal((await s.request(endpoint, { image: png }, s.admin, 'https://elsewhere.test')).status, 403)
+  const uploaded = await s.request(endpoint, { image: png }, s.admin)
+  assert.equal(uploaded.status, 201)
+  const { id, url } = await uploaded.json()
+  assert.equal(url, '/api/direct-media/' + id)
+  const image = await s.request(url)
+  assert.equal(image.status, 200)
+  assert.equal(image.headers.get('Content-Type'), 'image/png')
+  assert.deepEqual(new Uint8Array(await image.arrayBuffer()).slice(0, 8), new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]))
+  assert.equal((await s.request('/api/direct-media/' + crypto.randomUUID())).status, 404)
+  const site = await (await s.request('/api/admin/direct-store/site', undefined, s.admin)).json()
+  assert.equal((await s.request('/api/admin/direct-store/site', { ...site, logoMediaId: id }, s.admin)).status, 200)
+  const catalog = await (await s.request('/api/catalog')).json()
+  assert.equal(catalog.site.logoUrl, url)
+  assert.doesNotMatch(JSON.stringify(catalog), /iVBORw0KGgo/)
+})

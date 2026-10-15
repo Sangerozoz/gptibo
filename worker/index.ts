@@ -61,7 +61,7 @@ async function route(request: Request, env: Env): Promise<Response> {
       catch (caught) { return error(caught instanceof ApiError ? caught.message : '统计暂不可用。', caught instanceof ApiError ? caught.status : 503) }
     }
     if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request)
-    if (url.pathname.startsWith('/api/admin/') || url.pathname.startsWith('/api/partner/') || url.pathname.startsWith('/api/orders') || url.pathname === '/api/catalog') return commerce(request, env)
+    if (url.pathname.startsWith('/api/admin/') || url.pathname.startsWith('/api/partner/') || url.pathname.startsWith('/api/direct-media/') || url.pathname.startsWith('/api/orders') || url.pathname === '/api/catalog') return commerce(request, env)
     if (!['/api/interest', '/api/interest/cancel'].includes(url.pathname)) return error('未找到接口。', 404)
     if (request.method !== 'POST') return error('请通过登记表单提交。', 405)
     if (request.headers.get('Origin') !== url.origin) return error('请从本站重新打开表单。', 403)

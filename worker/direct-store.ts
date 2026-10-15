@@ -44,6 +44,41 @@ const mediaField = async (env: Env, value: unknown) => {
   if (typeof value !== 'string' || !/^[a-f0-9-]{36}$/.test(value) || !await env.INTEREST_DB.prepare('SELECT id FROM direct_media WHERE id=?').bind(value).first()) throw new ApiError('图片无效，请重新上传。')
   return value
 }
+function imageBytes(data: unknown) {
+  if (typeof data !== 'string') throw new ApiError('请选择 PNG 或 JPG 图片。')
+  const match = /^data:(image\/(?:png|jpeg));base64,([A-Za-z0-9+/]+={0,2})$/.exec(data)
+  if (!match || match[2].length > 470000) throw new ApiError('图片格式或大小无效。')
+  let decoded: string
+  try { decoded = atob(match[2]) } catch { throw new ApiError('图片内容无效。') }
+  const bytes = Uint8Array.from(decoded, char => char.charCodeAt(0))
+  if (bytes.length < 32) throw new ApiError('图片内容无效。')
+  if (bytes.length > 350000) throw new ApiError('图片大小需小于 350 KB。', 413)
+  let width = 0, height = 0
+  if (match[1] === 'image/png') {
+    const signature = [137,80,78,71,13,10,26,10]
+    if (!signature.every((byte, index) => bytes[index] === byte) || bytes[8] !== 0 || bytes[9] !== 0 || bytes[10] !== 0 || bytes[11] !== 13 || String.fromCharCode(...bytes.slice(12, 16)) !== 'IHDR') throw new ApiError('PNG 图片内容无效。')
+    const view = new DataView(bytes.buffer)
+    width = view.getUint32(16); height = view.getUint32(20)
+  } else {
+    if (bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes.at(-2) !== 0xff || bytes.at(-1) !== 0xd9) throw new ApiError('JPG 图片内容无效。')
+    let offset = 2
+    while (offset + 8 < bytes.length) {
+      if (bytes[offset] !== 0xff) break
+      const marker = bytes[offset + 1]
+      if (marker === 0xda) break
+      const length = (bytes[offset + 2] << 8) | bytes[offset + 3]
+      if (length < 2 || offset + length + 2 > bytes.length) break
+      if ([0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf].includes(marker)) {
+        height = (bytes[offset + 5] << 8) | bytes[offset + 6]
+        width = (bytes[offset + 7] << 8) | bytes[offset + 8]
+        break
+      }
+      offset += length + 2
+    }
+  }
+  if (!width || !height || width > 2048 || height > 2048) throw new ApiError('图片尺寸无效或超过 2048 像素。')
+  return { mime: match[1], base64: match[2], bytes }
+}
 const audit = (env: Env, id: string, action: string, target: string, note: string) => env.INTEREST_DB.prepare('INSERT INTO admin_audit(id,action,target_id,note,created_at) VALUES (?,?,?,?,?)').bind(id, action, target, note, Date.now())
 async function updated(env: Env, id: string, message: string) {
   if (!await env.INTEREST_DB.prepare('SELECT id FROM admin_audit WHERE id=?').bind(id).first()) throw new ApiError(message, 409)
@@ -65,6 +100,14 @@ async function ordered(env: Env, kind: 'categories' | 'products', data: Record<s
 
 export async function directStoreAdminRoute(request: Request, env: Env, path: string): Promise<Response> {
   const db = env.INTEREST_DB, method = request.method
+  if (path === '/api/admin/direct-store/media') {
+    if (method !== 'POST') throw new ApiError('请求方式不支持。', 405)
+    const data = await body(request, 500000)
+    const { mime, base64 } = imageBytes(data.image)
+    const id = crypto.randomUUID()
+    await db.prepare('INSERT INTO direct_media(id,mime,base64,created_at) VALUES (?,?,?,?)').bind(id, mime, base64, Date.now()).run()
+    return json({ id, url: directMediaUrl(id) }, 201)
+  }
   if (path === '/api/admin/direct-store/site') {
     if (method === 'GET') {
       const row = await db.prepare('SELECT name_zh,name_en,logo_media_id,version FROM direct_site WHERE id=1').first<VersionedSite>()
@@ -149,4 +192,14 @@ export async function directStoreAdminRoute(request: Request, env: Env, path: st
 export async function isDirectProductListed(env: Env, id: string) {
   const row = await env.INTEREST_DB.prepare('SELECT listed FROM direct_products WHERE id=?').bind(id).first<{ listed: number }>()
   return row?.listed === 1
+}
+
+export async function directMediaRoute(request: Request, env: Env, path: string) {
+  if (request.method !== 'GET') throw new ApiError('请求方式不支持。', 405)
+  const id = path.match(/^\/api\/direct-media\/([a-f0-9-]{36})$/)?.[1]
+  if (!id) throw new ApiError('图片不存在。', 404)
+  const row = await env.INTEREST_DB.prepare('SELECT mime,base64 FROM direct_media WHERE id=?').bind(id).first<{ mime: string; base64: string }>()
+  if (!row) throw new ApiError('图片不存在。', 404)
+  const bytes = Uint8Array.from(atob(row.base64), char => char.charCodeAt(0))
+  return new Response(bytes, { headers: { 'Content-Type': row.mime, 'Content-Length': String(bytes.length), 'Cache-Control': 'public, max-age=31536000, immutable', 'ETag': `"${id}"`, 'X-Content-Type-Options': 'nosniff' } })
 }

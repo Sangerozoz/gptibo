@@ -27,7 +27,7 @@ import { customerRoutes } from './customers.ts'
 import { invoiceRoutes } from './invoices.ts'
 import { publicAnnouncement } from './announcements.ts'
 import { rechargeReminderPreview } from './recharge-reminders.ts'
-import { directStoreAdminRoute, isDirectProductListed, publicDirectStore } from './direct-store.ts'
+import { directMediaRoute, directStoreAdminRoute, isDirectProductListed, publicDirectStore } from './direct-store.ts'
 import { adminGmailOrder, confirmGmailNotPurchased, fulfillGmail, gmailCheckoutEnabled, gmailProductsRoute, gmailSnapshot, gmailSnapshotStatement } from './account_supplier/service.ts'
 
 type Plan = { delivery_instructions: string; partner_enabled: number; id: string; product_id: string; name: string; price_cents: number; enabled: number; renewal_only: number; version: number }
@@ -68,6 +68,7 @@ export async function commerce(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url); const path = url.pathname; const method = request.method
     const auth = await authRoute(request, env, path)
     if (auth) return auth
+    if (path.startsWith('/api/direct-media/')) return await directMediaRoute(request, env, path)
     const partnerLogin = await partnerAuth(request, env, path)
     if (partnerLogin) return partnerLogin
     if (path === '/api/partner/invoices' || path.startsWith('/api/partner/invoices/')) return await invoiceRoutes(request, env, url)
