@@ -65,7 +65,7 @@ function App() {
   const brandName = store.partner?.brandName || (platformBrand ? locale === 'en' ? 'MEGHAN' : '硅基生物' : t('商店'))
   const brandLogo = store.partner?.logo || ''
   const pageTitle = store.partner?.pageTitle
-  const description = store.partner?.description || (platformBrand ? t('浏览 AI 订阅、学习会员、邮箱账号与工具服务。查看套餐、价格和交付方式，再决定是否下单。') : t('AI 订阅、语言学习与工具服务，在这里按需选择。'))
+  const description = store.partner?.description || (platformBrand ? t('浏览 AI 订阅、学习会员、邮箱账号与工具服务。查看套餐、价格和交付方式。') : t('AI 订阅、语言学习与工具服务，在这里按需选择。'))
   useEffect(() => {
     document.querySelector('meta[name="description"]')?.setAttribute('content', description)
     document.title = pageTitle || (platformBrand ? translateStorefront(locale, '硅基生物 · 会员订阅与工具服务') : brandName)
@@ -135,10 +135,8 @@ function App() {
       {page === 'store' ? <><section className={`store-intro page-width reveal-in${platformBrand ? ' store-intro-platform' : ''}`}>
         {platformBrand ? <>
           <div className="store-intro-main">
-            <span className="store-intro-kicker">{t('数字服务商店')}</span>
-            <h1>{t('数字服务，')}{locale === 'en' ? ' ' : null}<span>{t('选得明白。')}</span></h1>
+            <h1>{t('AI 服务安全透明')}</h1>
             <p>{description}</p>
-            <div className="store-intro-actions"><a className="store-intro-primary" href="#catalog-products">{t('浏览商品')}<ArrowRight size={16} /></a><Button variant="ghost" onClick={help}>{t('购买帮助')}<ChevronRight size={16} /></Button></div>
           </div>
           <div className="store-intro-art" aria-hidden="true">
             <img className="store-intro-head store-intro-head-lightning" src="/hero-heads/lightning.png" alt="" width="658" height="658" draggable="false" />
