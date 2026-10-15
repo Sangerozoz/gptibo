@@ -7,11 +7,11 @@ export const emailBrand = {
   admin: '__RECHARGE_BRAND_ADMIN_URL__',
 }
 export const platformEmailFields: Record<string, string> = {
-  BRAND_NAME: 'GPTibo',
-  BRAND_LOGO: 'https://shop.example.invalid/email-logo.png',
-  BRAND_ORDERS_URL: 'https://shop.example.invalid/orders',
-  BRAND_WORKSPACE_URL: 'https://shop.example.invalid/join',
-  BRAND_ADMIN_URL: 'https://shop.example.invalid/admin',
+  BRAND_NAME: '硅基生物',
+  BRAND_LOGO: '__RECHARGE_SITE_ORIGIN__/email-logo.png',
+  BRAND_ORDERS_URL: '__RECHARGE_SITE_ORIGIN__/orders',
+  BRAND_WORKSPACE_URL: '__RECHARGE_SITE_ORIGIN__/join',
+  BRAND_ADMIN_URL: '__RECHARGE_SITE_ORIGIN__/admin',
 }
 export function platformEmail(value: string) {
   return value.replace(/__RECHARGE_(BRAND_[A-Z_]+)__/g, (marker, key: string) => platformEmailFields[key] ?? marker)

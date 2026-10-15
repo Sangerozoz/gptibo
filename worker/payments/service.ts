@@ -12,7 +12,7 @@ import type { PaymentOrder, PaymentResult, PaymentProvider } from './types.ts'
 
 export type Payment = { order_id: string; provider: string; account: string; amount_cents: number; state: 'pending' | 'paid' | 'closed'; trade_no: string | null; qr: string | null; expires_at: number; lease_token: string | null; lease_until: number; notified_at: number | null }
 export const findPayment = (env: Env, id: string) => env.INTEREST_DB.prepare('SELECT * FROM payments WHERE order_id=?').bind(id).first<Payment>()
-const details = (p: Payment, o: Order): PaymentOrder => ({ id: p.order_id, amountCents: p.amount_cents, subject: o.is_test ? 'GPTibo · 支付联调测试（不交付商品）' : `GPTibo · ${emailProduct(o.plan)?.name ?? (isXGiftPlan(o.plan) ? o.plan_name : o.plan === 'codex-sms-once' ? 'Codex 接码' : 'ChatGPT ' + o.plan_name)}`, expiresAt: p.expires_at })
+const details = (p: Payment, o: Order): PaymentOrder => ({ id: p.order_id, amountCents: p.amount_cents, subject: o.is_test ? '硅基生物 · 支付联调测试（不交付商品）' : `硅基生物 · ${emailProduct(o.plan)?.name ?? (isXGiftPlan(o.plan) ? o.plan_name : o.plan === 'codex-sms-once' ? 'Codex 接码' : 'ChatGPT ' + o.plan_name)}`, expiresAt: p.expires_at })
 function providerFor(env: Env, p: Payment) {
   const provider = paymentProvider(env, p.provider)
   if (provider.account !== p.account) throw new ApiError('支付商户配置已变化，请恢复该订单原渠道配置后处理。', 503)

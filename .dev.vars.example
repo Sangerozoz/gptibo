@@ -21,6 +21,7 @@ PAYMENT_PROVIDER="alipay"
 PAYMENT_CHECKOUT_ENABLED="false"
 PAYMENT_TEST_ENABLED="false"
 PAYMENT_NOTIFY_ORIGIN="https://shop.example.invalid"
+PUBLIC_SITE_ORIGIN="http://127.0.0.1:8788" # Use your public HTTPS site origin before sending customer mail.
 ALIPAY_APP_ID= # Configure locally; never commit a real value.
 ALIPAY_SELLER_ID= # Configure locally; never commit a real value.
 ALIPAY_APP_PRIVATE_KEY= # Configure locally; never commit a real value.

@@ -313,7 +313,7 @@ func (a *Alipay) Refund(ctx context.Context, o Order, f Refund) (Refunded, error
 		return Refunded{}, e
 	}
 	amount, _ := AmountText(f.Amount)
-	r, e := a.gateway(ctx, "alipay.trade.refund", map[string]any{"out_trade_no": o.ID, "out_request_no": f.ID, "refund_amount": amount, "refund_reason": "GPTibo 订单售后退款"}, nil)
+	r, e := a.gateway(ctx, "alipay.trade.refund", map[string]any{"out_trade_no": o.ID, "out_request_no": f.ID, "refund_amount": amount, "refund_reason": "硅基生物 订单售后退款"}, nil)
 	if e != nil {
 		return Refunded{}, e
 	}

@@ -667,7 +667,7 @@ function Workspace({
       >
         <a className="admin-brand" href={preview ? '/admin' : '/join'}>
           <BrandMark />
-          <strong>GPTibo</strong>
+          <strong>硅基生物</strong>
         </a>
         <span className="partner-sidebar-caption">代理工作台</span>
         <nav className="partner-side-nav" aria-label="代理工作台导航">
@@ -786,7 +786,7 @@ export default function PartnerApp() {
   if (!preview && !session && !error) return <WorkspaceBoot />
   if (preview || session?.authenticated) return <><Feedback error={error} /><Workspace preview={preview} onLogout={() => void logout()} /></>
   return <main className="partner-login"><a className="partner-login-back" href="/"><ArrowLeft size={15} />返回商店</a><section className="partner-login-panel" aria-labelledby="partner-login-title">
-    <a className="partner-login-brand" href="/" aria-label="GPTibo 首页"><BrandMark /><strong>Recharge <span>AI</span></strong></a>
+    <a className="partner-login-brand" href="/" aria-label="硅基生物 首页"><BrandMark /><strong>硅基生物</strong></a>
     <header className="partner-login-heading"><h1 id="partner-login-title">登录代理工作台</h1><p>使用开通邮箱和邮件验证码登录。</p></header>
     {!session ? <><Feedback error={error} />{error ? <Button onClick={() => void check()} variant="outline">重新连接</Button> : <Feedback loading />}</> : !session.mailReady ? <div className="admin-setup"><h2>邮件服务待启用</h2><p>请联系平台管理员启用邮箱验证码。</p><Button variant="outline" onClick={() => void check()}>重新检查</Button></div> : <form className="partner-login-form" onSubmit={e => { e.preventDefault(); void verify() }}>
       <FieldGroup>

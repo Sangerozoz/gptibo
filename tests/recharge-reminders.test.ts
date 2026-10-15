@@ -8,7 +8,7 @@ const NOW = 1_800_000_000_000
 async function setup(t: Parameters<Parameters<typeof test>[1]>[0]) {
   const s = await customerFixture(); t.after(() => s.db.close())
   t.mock.method(Date, 'now', () => NOW)
-  Object.assign(s.env, { RESEND_API_KEY:'test', RESEND_FROM:'GPTibo <noreply@shop.example.invalid>' })
+  Object.assign(s.env, { RESEND_API_KEY:'test', RESEND_FROM:'硅基生物 <noreply@shop.example.invalid>' })
   s.db.prepare("UPDATE support_contacts SET wechat='platform_support',email='support@example.test' WHERE owner='platform'").run()
   function order(id = 'o1', paidAt = NOW - 900_000, plan = 'plus') {
     s.db.prepare(`INSERT INTO orders(id,owner_hash,idempotency_key,plan,plan_name,price_cents,mode,payment_status,status,customer_email,created_at,updated_at,last_event_id)

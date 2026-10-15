@@ -10,6 +10,7 @@ import PartnerOrderCompletedEmail from '../emails/partner-order-completed.tsx'
 import { reminderSubject } from '../emails/reminder-copy.ts'
 
 const token = '__RECHARGE_VERIFICATION_CODE__'
+const previewEmail = (value: string) => platformEmail(value).replaceAll('__RECHARGE_SITE_ORIGIN__', 'http://127.0.0.1:8788')
 const templates: Record<string, { subject: string; html: string; text: string }> = {}
 const preview = process.argv.includes('--preview')
 if (preview) await mkdir(new URL('../artifacts/emails/', import.meta.url), { recursive: true })
@@ -21,22 +22,22 @@ for (const kind of Object.keys(verificationCopy) as VerificationKind[]) {
   } else if (!html.includes(token) || !text.includes(token)) throw new Error('Missing verification code in ' + kind)
   templates[kind] = { subject: verificationCopy[kind].subject, html, text }
   if (preview) {
-    const sample = platformEmail(html).replaceAll(token, '482619').replace('https://shop.example.invalid/email-logo.png', '/email-logo.png')
+    const sample = previewEmail(html).replaceAll(token, '482619')
     await writeFile(new URL(`../artifacts/emails/${kind}.html`, import.meta.url), sample)
     await writeFile(new URL(`../artifacts/emails/${kind}-light.html`, import.meta.url), sample.replace('@media (prefers-color-scheme: dark)', '@media not all').replaceAll('content="light dark"', 'content="light"'))
-    await writeFile(new URL(`../artifacts/emails/${kind}.txt`, import.meta.url), platformEmail(text).replaceAll(token, '482619'))
+    await writeFile(new URL(`../artifacts/emails/${kind}.txt`, import.meta.url), previewEmail(text).replaceAll(token, '482619'))
   }
 }
 const reminderHtml = await render(createElement(RechargeReminderEmail))
 const partnerOrderHtml = await render(createElement(PartnerOrderCompletedEmail))
 templates['partner-order-completed'] = { subject: '__RECHARGE_BRAND_NAME__ · 你的商店有一笔订单已完成', html: partnerOrderHtml, text: toPlainText(partnerOrderHtml) }
 if (preview) {
-  const sample = platformEmail(partnerOrderHtml).replaceAll('__RECHARGE_SHOP_NAME__', '星河商店').replaceAll('__RECHARGE_ORDER_PRODUCT__', 'ChatGPT · Pro 5× · 按月订阅').replaceAll('__RECHARGE_ORDER_AMOUNT__', '¥699.00').replaceAll('__RECHARGE_ORDER_CUSTOMER__', 'customer@example.test').replaceAll('__RECHARGE_ORDER_COMPLETED__', '2026/10/08 16:30:00').replaceAll('__RECHARGE_ORDER_ID__', 'YMX-0123456789ABCDEF0123456789ABCDEF')
+  const sample = previewEmail(partnerOrderHtml).replaceAll('__RECHARGE_SHOP_NAME__', '星河商店').replaceAll('__RECHARGE_ORDER_PRODUCT__', 'ChatGPT · Pro 5× · 按月订阅').replaceAll('__RECHARGE_ORDER_AMOUNT__', '¥699.00').replaceAll('__RECHARGE_ORDER_CUSTOMER__', 'customer@example.test').replaceAll('__RECHARGE_ORDER_COMPLETED__', '2026/10/08 16:30:00').replaceAll('__RECHARGE_ORDER_ID__', 'YMX-0123456789ABCDEF0123456789ABCDEF')
   await writeFile(new URL('../artifacts/emails/partner-order-completed.html', import.meta.url), sample)
 }
 const gmailHtml = await render(createElement(GmailDeliveryEmail))
 templates['delivery-gmail'] = { subject: 'Gmail 账号 · 账号资料已发货', html: gmailHtml, text: toPlainText(gmailHtml) }
-if (preview) await writeFile(new URL('../artifacts/emails/delivery-gmail.html', import.meta.url), platformEmail(gmailHtml).replaceAll('__RECHARGE_DELIVERY_ORDER__', 'YMX-PREVIEW').replaceAll('__RECHARGE_DELIVERY_VALUE__', 'demo@example.test----DEMO-PASSWORD----DEMO-2FA').replaceAll('__RECHARGE_DELIVERY_INSTRUCTIONS__', '此为测试预览，账号资料无效。请通过原订单联系支持。'))
+if (preview) await writeFile(new URL('../artifacts/emails/delivery-gmail.html', import.meta.url), previewEmail(gmailHtml).replaceAll('__RECHARGE_DELIVERY_ORDER__', 'YMX-PREVIEW').replaceAll('__RECHARGE_DELIVERY_VALUE__', 'demo@example.test----DEMO-PASSWORD----DEMO-2FA').replaceAll('__RECHARGE_DELIVERY_INSTRUCTIONS__', '此为测试预览，账号资料无效。请通过原订单联系支持。'))
 for (const { id, kind, product, subject } of [
   { id: 'delivery-link', kind: 'link', product: 'gemini', subject: 'Gemini Pro 18 个月会员 · 领取链接已发货' },
   { id: 'delivery-cdk', kind: 'cdk', product: 'duolingo', subject: '多邻国 1 年会员 · 兑换 CDK 已发货' },
@@ -44,12 +45,12 @@ for (const { id, kind, product, subject } of [
 ] as const) {
   const html = await render(createElement(MembershipDeliveryEmail, { kind, product }))
   templates[id] = { subject, html, text: toPlainText(html) }
-  if (preview) await writeFile(new URL(`../artifacts/emails/${id}.html`, import.meta.url), platformEmail(html).replaceAll('__RECHARGE_DELIVERY_ORDER__', 'YMX-PREVIEW').replaceAll('__RECHARGE_DELIVERY_URL__', 'https://example.com/claim/preview').replaceAll('__RECHARGE_DELIVERY_VALUE__', kind === 'link' ? 'https://example.com/claim/preview' : 'DEMO-ONLY-NOT-A-REAL-CODE').replaceAll('__RECHARGE_DELIVERY_INSTRUCTIONS__', '请先核对领取账号，再按照页面提示操作。'))
+  if (preview) await writeFile(new URL(`../artifacts/emails/${id}.html`, import.meta.url), previewEmail(html).replaceAll('__RECHARGE_DELIVERY_ORDER__', 'YMX-PREVIEW').replaceAll('__RECHARGE_DELIVERY_URL__', 'https://example.com/claim/preview').replaceAll('__RECHARGE_DELIVERY_VALUE__', kind === 'link' ? 'https://example.com/claim/preview' : 'DEMO-ONLY-NOT-A-REAL-CODE').replaceAll('__RECHARGE_DELIVERY_INSTRUCTIONS__', '请先核对领取账号，再按照页面提示操作。'))
 }
 templates['recharge-reminder'] = { subject: reminderSubject, html: reminderHtml, text: toPlainText(reminderHtml) }
 if (preview) {
-  await writeFile(new URL('../artifacts/emails/recharge-reminder.html', import.meta.url), platformEmail(reminderHtml))
-  await writeFile(new URL('../artifacts/emails/recharge-reminder.txt', import.meta.url), platformEmail(templates['recharge-reminder'].text))
+  await writeFile(new URL('../artifacts/emails/recharge-reminder.html', import.meta.url), previewEmail(reminderHtml))
+  await writeFile(new URL('../artifacts/emails/recharge-reminder.txt', import.meta.url), previewEmail(templates['recharge-reminder'].text))
 }
 await writeFile(new URL('../worker/emails.generated.ts', import.meta.url), '// Generated by npm run emails:build. Edit emails/*.tsx instead.\nexport const emailTemplates = ' + platformEmail(JSON.stringify(templates, null, 2)) + ' as const\n')
 for (const [kind, message] of Object.entries(templates)) { if (kind.startsWith('delivery-')) message.subject = '__RECHARGE_BRAND_NAME__ · ' + message.subject }

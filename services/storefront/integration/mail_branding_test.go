@@ -106,7 +106,7 @@ func TestMailBrandingHierarchyStoreAndAuthentication(t *testing.T) {
 	}
 	execSQL(t, owner, `DELETE FROM auth_limits`)
 	object(t, request(h, "POST", "/api/admin/partners/child/invitation", map[string]any{}, admin), 200)
-	if captured.invites[1].Name != "GPTibo" {
+	if captured.invites[1].Name != "硅基生物" {
 		t.Fatal("admin invitation uses child identity")
 	}
 	object(t, request(h, "POST", "/api/orders/recovery/send", map[string]any{"email": "buyer@example.test", "shop": "SEC123"}, nil), 200)
@@ -178,7 +178,7 @@ func TestMailBrandingDeliveryReminderAndNotificationSnapshots(t *testing.T) {
 	if e = json.Unmarshal([]byte(raw), &saved); e != nil {
 		t.Fatal(e)
 	}
-	if !strings.Contains(saved.Subject, "二店品牌") || !strings.Contains(saved.Text, "二店品牌") || !strings.Contains(saved.HTML, "/r/"+shop["slug"].(string)+"/orders") || strings.Contains(saved.Text, "GPTibo") {
+	if !strings.Contains(saved.Subject, "二店品牌") || !strings.Contains(saved.Text, "二店品牌") || !strings.Contains(saved.HTML, "/r/"+shop["slug"].(string)+"/orders") || strings.Contains(saved.Text, "硅基生物") {
 		t.Fatal("delivery used wrong brand")
 	}
 	reminder, e := service.ReminderMessage(ctx, "MAIL-BRAND", "Plus", f.childID, shopID)
@@ -221,8 +221,8 @@ func (m *upstreamNotificationMail) Freeze(to string, value mailer.Message) (stri
 
 func TestPartnerNotificationUpstreamBrand(t *testing.T) {
 	for _, tc := range []struct{ name, partner, shop, shopName, sender, logo, workspace string }{
-		{"top-level-default", "a", "a", "一级自有品牌", "GPTibo", "/email-logo.png", testOrigin + "/join"},
-		{"top-level-second-store", "a", "a-second", "一级二店", "GPTibo", "/email-logo.png", testOrigin + "/join"},
+		{"top-level-default", "a", "a", "一级自有品牌", "硅基生物", "/email-logo.png", testOrigin + "/join"},
+		{"top-level-second-store", "a", "a-second", "一级二店", "硅基生物", "/email-logo.png", testOrigin + "/join"},
 		{"child-default", "b", "b", "二级自有品牌", "一级自有品牌", "/store-logos/" + security.Hash("a") + "/" + strings.Repeat("a", 64) + ".png", "https://parent.example.com/join"},
 		{"child-second-store", "b", "b-second", "二级二店", "一级自有品牌", "/store-logos/" + security.Hash("a") + "/" + strings.Repeat("a", 64) + ".png", "https://parent.example.com/join"},
 	} {

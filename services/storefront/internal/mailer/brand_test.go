@@ -10,6 +10,13 @@ import (
 	"testing"
 )
 
+func TestPlatformBrandUsesChineseIdentityAndConfiguredOrigin(t *testing.T) {
+	b := PlatformBrand("https://meghan.example.test/")
+	if b.Name != "硅基生物" || b.Logo != "https://meghan.example.test/email-logo.png" || b.AdminURL != "https://meghan.example.test/admin" {
+		t.Fatalf("unexpected platform mail brand: %+v", b)
+	}
+}
+
 func TestBrandedTemplatesCoverEveryMailAndEscapeIdentity(t *testing.T) {
 	var templates map[string]Message
 	if e := json.Unmarshal(templateJSON, &templates); e != nil {
@@ -30,7 +37,7 @@ func TestBrandedTemplatesCoverEveryMailAndEscapeIdentity(t *testing.T) {
 			if !strings.HasPrefix(m.Subject, brand.Name+" · ") || !strings.Contains(m.HTML, "星河 &lt;商店&gt; &amp;") || !strings.Contains(m.Text, brand.Name) || m.SenderName != brand.Name {
 				t.Fatal("missing branded subject/html/text/sender", m.Subject)
 			}
-			if strings.Contains(m.HTML, "<商店>") || strings.Contains(m.HTML+m.Text+m.Subject, "__RECHARGE_") || strings.Contains(m.HTML+m.Text+m.Subject, "GPTibo") || strings.Contains(m.HTML, "RECHARGE AI") {
+			if strings.Contains(m.HTML, "<商店>") || strings.Contains(m.HTML+m.Text+m.Subject, "__RECHARGE_") || strings.Contains(m.HTML+m.Text+m.Subject, "硅基生物") || strings.Contains(m.HTML, "RECHARGE AI") {
 				t.Fatal("unsafe, unresolved or platform identity remains")
 			}
 			if !strings.Contains(m.HTML, brand.Logo) {
@@ -104,7 +111,7 @@ func TestInvitationContextBrandAndSeparateDestination(t *testing.T) {
 			t.Fatal(e)
 		}
 		a, _ := mail.ParseAddress(f.From)
-		if a.Name != "一级店" || !strings.Contains(f.HTML, b.Logo) || !strings.Contains(f.Text, "https://child.example.test/join") || strings.Contains(f.Text, "GPTibo") {
+		if a.Name != "一级店" || !strings.Contains(f.HTML, b.Logo) || !strings.Contains(f.Text, "https://child.example.test/join") || strings.Contains(f.Text, "硅基生物") {
 			t.Fatal("inviter identity or child login destination lost")
 		}
 		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(`{"id":"fixture"}`)), Header: http.Header{}}, nil

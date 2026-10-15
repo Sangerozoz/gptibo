@@ -15,7 +15,7 @@ const keys = generateKeyPairSync('rsa', { modulusLength: 2048 })
 const config: AlipayConfig = { ALIPAY_APP_ID: '2026000000000000', ALIPAY_SELLER_ID: '2088000000000000', ALIPAY_APP_PRIVATE_KEY: keys.privateKey.export({ type: 'pkcs8', format: 'pem' }).toString(), ALIPAY_PUBLIC_KEY: keys.publicKey.export({ type: 'spki', format: 'pem' }).toString() }
 const signText = (text: string) => sign('RSA-SHA256', Buffer.from(text), keys.privateKey).toString('base64')
 const reply = (method: string, data: Record<string, unknown>) => { const raw = JSON.stringify(data); return new Response(`{"${method.replaceAll('.', '_')}_response":${raw},"sign":"${signText(raw)}"}`) }
-const order = { id: 'YMX-EXAMPLE', amountCents: 13900, subject: 'GPTibo · Plus', expiresAt: Date.now() + 900000 }
+const order = { id: 'YMX-EXAMPLE', amountCents: 13900, subject: '硅基生物 · Plus', expiresAt: Date.now() + 900000 }
 const trade = (id = order.id, amount = '139.00') => ({ code: '10000', out_trade_no: id, total_amount: amount, seller_id: config.ALIPAY_SELLER_ID, trade_status: 'TRADE_SUCCESS', trade_no: '202609270000000001' })
 type TestContext = Parameters<Parameters<typeof test>[1]>[0]
 function mockGateway(t: TestContext, handler: (method: string, biz: Record<string, unknown>) => Record<string, unknown> | Promise<Record<string, unknown>>) {

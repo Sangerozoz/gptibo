@@ -107,6 +107,6 @@ test('verification email redirects cannot forward a login code or request body t
     assert.equal(options.redirect, 'manual')
     return new Response(null, { status: 307, headers: { Location: 'https://evil.test/steal' } })
   })
-  await assert.rejects(sendVerificationEmail({ RESEND_API_KEY: 'mock-key', RESEND_FROM: 'Recharge <login@example.test>' } as Env, 'order-recovery', 'buyer@example.test', '123456', crypto.randomUUID()), /delivery failed/)
+  await assert.rejects(sendVerificationEmail({ RESEND_API_KEY: 'mock-key', RESEND_FROM: '硅基生物 <login@example.test>', PUBLIC_SITE_ORIGIN: 'https://shop.example.invalid' } as Env, 'order-recovery', 'buyer@example.test', '123456', crypto.randomUUID()), /delivery failed/)
   assert.equal(calls, 1)
 })

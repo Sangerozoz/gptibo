@@ -26,6 +26,7 @@ export interface Env {
   ADMIN_TOTP_SECRET?: string
   RESEND_API_KEY?: string
   RESEND_FROM?: string
+  PUBLIC_SITE_ORIGIN?: string
   /** Shared Feishu alert bot, the same app used for SMS restock alerts. */
   FEISHU_APP_ID?: string
   FEISHU_APP_SECRET?: string

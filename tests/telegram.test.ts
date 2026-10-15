@@ -14,7 +14,7 @@ function fixture(t: TestContext) {
   const statements = new WeakMap<Statement, { sql: string; values: Value[] }>()
   const env: Env = {
     TELEGRAM_BOT_TOKEN: 'test-token', TELEGRAM_BOT_USERNAME: 'ExampleBot', TELEGRAM_WEBHOOK_SECRET: 'a'.repeat(64), TELEGRAM_ALLOWED_GROUP_IDS: '-10042',
-    RESEND_API_KEY: 'test-only', RESEND_FROM: 'test@example.invalid', PARTNER_AUTH_SECRET: 'b'.repeat(64),
+    RESEND_API_KEY: 'test-only', RESEND_FROM: 'test@example.invalid', PUBLIC_SITE_ORIGIN: 'https://shop.example.invalid', PARTNER_AUTH_SECRET: 'b'.repeat(64),
     ASSETS: { fetch: async () => new Response('asset') }, INTEREST_LIMITER: { limit: async () => ({ success: true }) }, API_LIMITER: { limit: async () => ({ success: true }) }, EXPENSIVE_LIMITER: { limit: async () => ({ success: true }) },
     INTEREST_DB: {
       prepare(sql) {

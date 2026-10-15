@@ -23,7 +23,7 @@ func (s Service) provider(p map[string]any) (payments.Provider, error) {
 	return s.paymentService().Resolve(p["provider"].(string), p["account"].(string))
 }
 func payOrder(p map[string]any) payments.Order {
-	return payments.Order{ID: p["id"].(string), Amount: p["amount_cents"].(int64), Expires: p["expires_at"].(int64), Subject: "GPTibo · 开票手续费"}
+	return payments.Order{ID: p["id"].(string), Amount: p["amount_cents"].(int64), Expires: p["expires_at"].(int64), Subject: "硅基生物 · 开票手续费"}
 }
 func (s Service) Apply(ctx context.Context, expected map[string]any, r payments.Result) error {
 	if expected["id"] != r.OrderID || expected["amount_cents"] != r.Amount || (r.Status != "pending" && r.Status != "not_found" && r.Status != "paid" && r.Status != "closed") || (r.Status == "paid" && r.TradeNo == "") {

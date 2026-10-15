@@ -18,7 +18,7 @@ async function setup() {
   for (const file of readdirSync(new URL('../migrations/', import.meta.url)).filter(f => f.endsWith('.sql')).sort()) db.exec(readFileSync(new URL('../migrations/' + file, import.meta.url), 'utf8'))
   const bound = new WeakMap<Statement, { sql: string; values: Value[] }>()
   const env: Env = {
-    ORDER_TESTING_ENABLED: 'true', ASSETS: { fetch: async () => new Response('asset') }, ADMIN_EMAIL: 'admin@example.invalid', ADMIN_USERNAME: 'tester', ADMIN_TOTP_SECRET: credential,
+    ORDER_TESTING_ENABLED: 'true', PUBLIC_SITE_ORIGIN: 'https://shop.example.invalid', ASSETS: { fetch: async () => new Response('asset') }, ADMIN_EMAIL: 'admin@example.invalid', ADMIN_USERNAME: 'tester', ADMIN_TOTP_SECRET: credential,
     INTEREST_LIMITER: { limit: async () => ({ success: true }) },
     API_LIMITER: { limit: async () => ({ success: true }) },
     EXPENSIVE_LIMITER: { limit: async () => ({ success: true }) },

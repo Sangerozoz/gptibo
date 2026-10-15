@@ -117,7 +117,7 @@ export function alipay(config: AlipayConfig): PaymentProvider {
     },
     async refund(order, refund) {
       refundValid(order, refund)
-      const result = await gateway(config, 'alipay.trade.refund', { out_trade_no: order.id, refund_amount: amountText(refund.amountCents), out_request_no: refund.id, refund_reason: 'GPTibo 订单售后退款' })
+      const result = await gateway(config, 'alipay.trade.refund', { out_trade_no: order.id, refund_amount: amountText(refund.amountCents), out_request_no: refund.id, refund_reason: '硅基生物 订单售后退款' })
       if (result.code !== '10000' || result.out_trade_no !== order.id) throw new Error('Alipay refund rejected')
       if (result.fund_change !== 'Y') return { refunded: false }
       if (amountCents(result.refund_fee) !== refund.amountCents) throw new Error('Alipay refund amount mismatch')

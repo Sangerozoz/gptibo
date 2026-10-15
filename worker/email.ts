@@ -3,6 +3,21 @@ import type { Env } from './platform.ts'
 import { membershipClaimUrl } from '../shared/membership-claim.ts'
 import { boundedResponseText } from './bounded-response.ts'
 
+type EmailMessage = { subject: string; html: string; text: string }
+export function siteEmail(env: Env, message: EmailMessage): EmailMessage {
+  const input = env.PUBLIC_SITE_ORIGIN || (env.ORDER_TESTING_ENABLED === 'true' ? 'http://127.0.0.1:8788' : '')
+  let url: URL
+  try { url = new URL(input) } catch { throw new Error('PUBLIC_SITE_ORIGIN must be configured before sending mail') }
+  const loopback = ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname)
+  if ((url.protocol !== 'https:' && !(env.ORDER_TESTING_ENABLED === 'true' && loopback && url.protocol === 'http:')) || url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new Error('PUBLIC_SITE_ORIGIN must be an HTTPS origin or local loopback in testing mode')
+  const origin = url.origin
+  return {
+    subject: message.subject.replaceAll('__RECHARGE_SITE_ORIGIN__', origin),
+    html: message.html.replaceAll('__RECHARGE_SITE_ORIGIN__', origin),
+    text: message.text.replaceAll('__RECHARGE_SITE_ORIGIN__', origin),
+  }
+}
+
 export type VerificationKind = Exclude<keyof typeof emailTemplates, 'partner-welcome' | 'recharge-reminder' | 'delivery-link' | 'delivery-cdk' | 'delivery-duolingo-link' | 'delivery-gmail'>
 
 export function membershipDeliveryMessage(kind: 'link' | 'cdk', orderId: string, value: string, instructions: string, plan?: string) {
@@ -69,7 +84,7 @@ async function sendEmail(env: Env, to: string, message: { subject: string; html:
     method: 'POST',
     redirect: 'manual',
     headers: { Authorization: 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
-    body: JSON.stringify({ from: env.RESEND_FROM, to: [to], ...message }),
+    body: JSON.stringify({ from: env.RESEND_FROM, to: [to], ...siteEmail(env, message) }),
     signal: AbortSignal.timeout(10000),
   })
   if (!response.ok) throw new Error('delivery failed')

@@ -16,6 +16,8 @@ test('first visit selects the first supported browser language and safely defaul
 })
 
 test('translations preserve Chinese defaults, shop content and literal interpolation values', () => {
+  assert.equal(translateStorefront('zh-CN', '硅基生物 · 会员订阅与工具服务'), '硅基生物 · 会员订阅与工具服务')
+  assert.equal(translateStorefront('en', '硅基生物 · 会员订阅与工具服务'), 'MEGHAN · Subscriptions & tools')
   assert.equal(translateStorefront('en', '全部商品'), 'All products')
   assert.equal(translateStorefront('zh-CN', '全部商品'), '全部商品')
   assert.equal(translateStorefront('en', '商家自定义公告'), '商家自定义公告')

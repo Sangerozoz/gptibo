@@ -165,7 +165,7 @@ func (s *Service) alertWindow(ctx context.Context, start time.Time) error {
 		ips = ips[:1500] + "…"
 	}
 	body := fmt.Sprintf("%s 至 %s（UTC）触发 %d 次短时安全限制。来源 IP：%s。限制持续 15 分钟，支付回调不受影响。详情请登录管理后台的安全审计。", start.Format(time.RFC3339), start.Add(15*time.Minute).Format(time.RFC3339), count, ips)
-	frozen, err := s.Sender.Freeze(s.Recipient, mailer.Message{Subject: "GPTibo 异常访问告警", Text: body, HTML: "<p>" + html.EscapeString(body) + "</p>"})
+	frozen, err := s.Sender.Freeze(s.Recipient, mailer.Message{Subject: "硅基生物 异常访问告警", Text: body, HTML: "<p>" + html.EscapeString(body) + "</p>"})
 	if err != nil {
 		return err
 	}

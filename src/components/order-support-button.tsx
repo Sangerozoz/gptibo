@@ -129,7 +129,7 @@ export function OrderSupportButton({
                   <span className="order-support-badge">联系方式</span>
                 </div>
                 <Popover.Description className="order-support-desc">
-                  {name || 'GPTibo'}
+                  {name || '硅基生物'}
                 </Popover.Description>
               </div>
             </header>

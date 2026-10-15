@@ -34,7 +34,7 @@ function providerFor(env: Env, p: Payment) {
   if (provider.account !== p.account) throw new ApiError('请恢复原支付商户配置后再处理该申请。', 503)
   return provider
 }
-const paymentOrder = (p: Payment) => ({ id: p.id, amountCents: p.amount_cents, subject: 'GPTibo · 开票手续费', expiresAt: p.expires_at })
+const paymentOrder = (p: Payment) => ({ id: p.id, amountCents: p.amount_cents, subject: '硅基生物 · 开票手续费', expiresAt: p.expires_at })
 function paymentView(p: Payment | null, invoice: Invoice): InvoicePaymentView | null {
   return p ? { status: p.state, amountCents: p.amount_cents, expiresAt: p.expires_at, qr: invoice.status === 'awaiting_payment' && p.state === 'pending' && p.expires_at > Date.now() ? p.qr : null } : null
 }

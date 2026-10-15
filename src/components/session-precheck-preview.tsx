@@ -53,7 +53,7 @@ export default function SessionPrecheckPreview() {
   const [selected, setSelected] = useState(cases[1])
   const [revision, setRevision] = useState(0)
   const [dark, setDark] = useState(document.documentElement.classList.contains('dark'))
-  return <main className="precheck-preview"><header><div><BrandMark /><span>GPTibo <small>本地体验</small></span></div><button type="button" onClick={() => { document.documentElement.classList.toggle('dark'); setDark(!dark) }} aria-label="切换深浅色">{dark ? <Sun size={18} /> : <Moon size={18} />}</button></header>
+  return <main className="precheck-preview"><header><div><BrandMark /><span>硅基生物 <small>本地体验</small></span></div><button type="button" onClick={() => { document.documentElement.classList.toggle('dark'); setDark(!dark) }} aria-label="切换深浅色">{dark ? <Sun size={18} /> : <Moon size={18} />}</button></header>
     <div className="precheck-preview-intro"><span>ACCOUNT CHECK · LOCAL PREVIEW</span><h1>先确认账号，<br />再安心充值。</h1><p>新的 Session 提交体验。请选择一种情况，查看客户会收到的提示。</p></div>
     <div className="precheck-preview-grid"><aside><div className="precheck-preview-label">体验不同结果 <span>{cases.length} 种情况</span></div>{cases.map(item => <button type="button" key={item.id} className="precheck-preview-case" aria-pressed={selected.id === item.id} onClick={() => { setSelected(item); setRevision(v => v + 1) }}><span><strong>{item.label}</strong><small>{item.note}</small></span>{selected.id === item.id && <Check size={16} />}</button>)}<button type="button" className="precheck-preview-reset" onClick={() => setRevision(v => v + 1)}><RotateCcw size={14} />重新体验当前情况</button><p className="precheck-preview-note">仅本地模拟，不读取真实账号，不发起支付或充值。线上程序尚未部署。</p></aside><PreviewOrder key={`${selected.id}:${revision}`} selected={selected} /></div>
   </main>

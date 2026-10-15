@@ -4,7 +4,7 @@ const time=(v:number|null)=>v===null?'':new Date(v).toLocaleString('zh-CN',{time
 const kinds={open:'首次开通',renew:'续费',upgrade:'升级'}
 export async function customerWorkbook(data:CustomerExport) {
   const {default:ExcelJS}=await import('exceljs')
-  const workbook=new ExcelJS.Workbook();workbook.creator='GPTibo';workbook.created=new Date(data.asOf)
+  const workbook=new ExcelJS.Workbook();workbook.creator='硅基生物';workbook.created=new Date(data.asOf)
   const names=new Map(data.customers.map(c=>[c.id,c]))
   const customers=workbook.addWorksheet('客户资料')
   customers.addRow(['客户编号','客户名称','所属代理','客户来源','微信','QQ','邮箱','备注','录入时间（北京时间）'])
