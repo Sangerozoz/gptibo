@@ -65,7 +65,7 @@ function App() {
   const brandName = store.partner?.brandName || (platformBrand ? locale === 'en' ? 'MEGHAN' : '硅基生物' : t('商店'))
   const brandLogo = store.partner?.logo || ''
   const pageTitle = store.partner?.pageTitle
-  const description = store.partner?.description || (platformBrand ? t('硅基生物：AI 与学习会员订阅、工具服务，套餐价格公开，订单进度可查。') : t('AI 订阅、语言学习与工具服务，在这里按需选择。'))
+  const description = store.partner?.description || (platformBrand ? t('浏览 AI 订阅、学习会员、邮箱账号与工具服务。查看套餐、价格和交付方式，再决定是否下单。') : t('AI 订阅、语言学习与工具服务，在这里按需选择。'))
   useEffect(() => {
     document.querySelector('meta[name="description"]')?.setAttribute('content', description)
     document.title = pageTitle || (platformBrand ? translateStorefront(locale, '硅基生物 · 会员订阅与工具服务') : brandName)
@@ -132,9 +132,23 @@ function App() {
     </div></header>
     <main id="main-content" tabIndex={-1}>
       {store.error && <div className="storage-warning" role="alert">{t(store.error)} <Button variant="ghost" onClick={() => void store.refresh()}>{t('重试')}</Button></div>}
-      {page === 'store' ? <><section className="store-intro page-width reveal-in">
-        <div><h1>{store.partner?.headline || <>{t('商店。')}<span>{t('找到适合你的服务。')}</span></>}</h1><p>{description}</p></div>
-        <div className="store-intro-support"><span>{t('选购遇到问题？')}</span><Button variant="ghost" onClick={openSupport}>{t('联系支持')}<ArrowRight size={14} /></Button></div>
+      {page === 'store' ? <><section className={`store-intro page-width reveal-in${platformBrand ? ' store-intro-platform' : ''}`}>
+        {platformBrand ? <>
+          <div className="store-intro-main">
+            <span className="store-intro-kicker">{t('数字服务商店')}</span>
+            <h1>{t('数字服务，')}<span>{t('选得明白。')}</span></h1>
+            <p>{description}</p>
+            <div className="store-intro-actions"><a className="store-intro-primary" href="#catalog-products">{t('浏览商品')}<ArrowRight size={16} /></a><Button variant="ghost" onClick={help}>{t('购买帮助')}<ChevronRight size={16} /></Button></div>
+          </div>
+          <ol className="store-intro-steps" aria-label={t('选购步骤')}>
+            <li><span>01</span><strong>{t('按品类找服务')}</strong></li>
+            <li><span>02</span><strong>{t('核对套餐与交付')}</strong></li>
+            <li><span>03</span><strong>{t('在订单页查看进度')}</strong></li>
+          </ol>
+        </> : <>
+          <div><h1>{store.partner?.headline || <>{t('商店。')}<span>{t('找到适合你的服务。')}</span></>}</h1><p>{description}</p></div>
+          <div className="store-intro-support"><span>{t('选购遇到问题？')}</span><Button variant="ghost" onClick={openSupport}>{t('联系支持')}<ArrowRight size={14} /></Button></div>
+        </>}
         </section><ProductCatalog catalogReady={store.catalogReady} error={store.error} hiddenProductIds={store.hiddenProductIds} productOrder={store.productOrder} offers={store.catalog} onHelp={help} onOrders={() => navigate('orders')} onNavigate={navigate} /></> : isDetail && productHidden ? <section className="empty-orders page-width"><h1>{t('该商品已下架')}</h1><p>{t('商店暂不销售此商品，已有订单可在「我的订单」中继续处理。')}</p><Button onClick={() => navigate('store')}>{t('返回商店')}</Button></section> : isDetail ? <>
         <section className="detail-intro page-width reveal-in"><nav className="product-breadcrumb" aria-label="当前位置"><a href={storefrontHref('store')} onClick={event => { if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; event.preventDefault(); navigate('store') }}>全部商品</a><ChevronRight size={13} /><span aria-current="page">{product.name}</span></nav><h1>{product.name}</h1><p>{product.tagline}</p></section>
         <PurchaseWorkspace product={product} plans={plans} plan={plan} selected={selected} store={store} setSelected={setSelected} beginPurchase={beginPurchase} help={help} onGuide={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'auto' })} />

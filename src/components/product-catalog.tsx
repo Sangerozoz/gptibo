@@ -80,7 +80,7 @@ export function ProductCatalog({ onHelp, onOrders, onNavigate, offers, catalogRe
       <div className="store-sidebar-links"><Button variant="ghost" onClick={onOrders}><Clock3 size={16} />{t('继续我的订单')}</Button><Button variant="ghost" onClick={onHelp}><CircleHelp size={16} />{t('购买帮助')}</Button></div>
     </aside>
     <div className="store-content" aria-busy={!catalogReady && !error}>
-      <div className="store-toolbar"><h2>{t(query ? '搜索结果' : category === 'all' ? '为你精选。' : categories.find(c => c.id === category)!.name)}</h2><label className="store-search"><Search size={15} /><Input aria-label={t('搜索商品')} placeholder={t('搜索商品')} value={query} onChange={e => setQuery(e.target.value)} /></label></div>
+      <div className="store-toolbar"><h2>{t(query ? '搜索结果' : category === 'all' ? '全部服务' : categories.find(c => c.id === category)!.name)}</h2><label className="store-search"><Search size={15} /><Input aria-label={t('搜索商品')} placeholder={t('搜索商品')} value={query} onChange={e => setQuery(e.target.value)} /></label></div>
       {!catalogReady ? error ? <p className="store-empty" role="status">{t('商品暂时加载失败，请点击上方重试。')}</p> : <>
         <span className="sr-only" role="status">{t('正在加载商品')}</span><CatalogSkeleton />
       </> : <>
