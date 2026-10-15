@@ -136,15 +136,10 @@ function App() {
         {platformBrand ? <>
           <div className="store-intro-main">
             <span className="store-intro-kicker">{t('数字服务商店')}</span>
-            <h1>{t('数字服务，')}<span>{t('选得明白。')}</span></h1>
+            <h1>{t('数字服务，')}{locale === 'en' ? ' ' : null}<span>{t('选得明白。')}</span></h1>
             <p>{description}</p>
             <div className="store-intro-actions"><a className="store-intro-primary" href="#catalog-products">{t('浏览商品')}<ArrowRight size={16} /></a><Button variant="ghost" onClick={help}>{t('购买帮助')}<ChevronRight size={16} /></Button></div>
           </div>
-          <ol className="store-intro-steps" aria-label={t('选购步骤')}>
-            <li><span>01</span><strong>{t('按品类找服务')}</strong></li>
-            <li><span>02</span><strong>{t('核对套餐与交付')}</strong></li>
-            <li><span>03</span><strong>{t('在订单页查看进度')}</strong></li>
-          </ol>
         </> : <>
           <div><h1>{store.partner?.headline || <>{t('商店。')}<span>{t('找到适合你的服务。')}</span></>}</h1><p>{description}</p></div>
           <div className="store-intro-support"><span>{t('选购遇到问题？')}</span><Button variant="ghost" onClick={openSupport}>{t('联系支持')}<ArrowRight size={14} /></Button></div>
