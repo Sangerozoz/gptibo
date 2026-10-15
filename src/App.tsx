@@ -140,6 +140,13 @@ function App() {
             <p>{description}</p>
             <div className="store-intro-actions"><a className="store-intro-primary" href="#catalog-products">{t('浏览商品')}<ArrowRight size={16} /></a><Button variant="ghost" onClick={help}>{t('购买帮助')}<ChevronRight size={16} /></Button></div>
           </div>
+          <div className="store-intro-art" aria-hidden="true">
+            <img className="store-intro-head store-intro-head-lightning" src="/hero-heads/lightning.png" alt="" width="658" height="658" draggable="false" />
+            <img className="store-intro-head store-intro-head-pink" src="/hero-heads/pink-cap.png" alt="" width="658" height="658" draggable="false" />
+            <img className="store-intro-head store-intro-head-rainbow" src="/hero-heads/rainbow.png" alt="" width="658" height="658" draggable="false" />
+            <img className="store-intro-head store-intro-head-purple" src="/hero-heads/purple-cap.png" alt="" width="658" height="658" draggable="false" />
+            <img className="store-intro-head store-intro-head-red" src="/hero-heads/red-cap.png" alt="" width="658" height="658" draggable="false" />
+          </div>
         </> : <>
           <div><h1>{store.partner?.headline || <>{t('商店。')}<span>{t('找到适合你的服务。')}</span></>}</h1><p>{description}</p></div>
           <div className="store-intro-support"><span>{t('选购遇到问题？')}</span><Button variant="ghost" onClick={openSupport}>{t('联系支持')}<ArrowRight size={14} /></Button></div>
