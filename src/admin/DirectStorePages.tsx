@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
-import { ArrowDown, ArrowUp, ImagePlus, Package, Save } from 'lucide-react'
+import { ArrowDown, ArrowUp, GripVertical, ImagePlus, Package, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { api, errorMessage } from '@/lib/api'
@@ -103,7 +103,15 @@ function move(ids: readonly string[], index: number, delta: number) {
   return next
 }
 
-function CategoryList({ initial, onUpdated }: { initial: { categories: Category[]; orderVersion: number }; onUpdated: () => void }) {
+function reposition(ids: readonly string[], from: string, to: string) {
+  const next = [...ids], oldIndex = next.indexOf(from), newIndex = next.indexOf(to)
+  if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return next
+  next.splice(oldIndex, 1)
+  next.splice(newIndex, 0, from)
+  return next
+}
+
+function CategoryList({ initial, products, onUpdated }: { initial: { categories: Category[]; orderVersion: number }; products: Product[]; onUpdated: () => void }) {
   const [ids, setIds] = useState(initial.categories.map(item => item.id))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -113,15 +121,16 @@ function CategoryList({ initial, onUpdated }: { initial: { categories: Category[
     try { await api('/api/admin/direct-store/categories/order', { ids, version: initial.orderVersion }); onUpdated() }
     catch (cause) { setError(errorMessage(cause)) } finally { setBusy(false) }
   }
-  return <><p className="admin-panel-footnote">停用分类后，分类筛选会隐藏；其中已上架商品仍显示在“全部商品”。调整位置后请保存排序。</p><div className="direct-admin-list">{ids.map((id, index) => { const item = initial.categories.find(category => category.id === id)!; return <div className="direct-admin-row" key={id}><div className="direct-row-heading"><strong>{item.nameZh}</strong><span>{item.active ? '显示中' : '已停用'} · {item.id}</span><div className="direct-move"><Button variant="outline" size="icon" aria-label={`上移 ${item.nameZh}`} disabled={busy || index === 0} onClick={() => setIds(move(ids, index, -1))}><ArrowUp size={14} /></Button><Button variant="outline" size="icon" aria-label={`下移 ${item.nameZh}`} disabled={busy || index === ids.length - 1} onClick={() => setIds(move(ids, index, 1))}><ArrowDown size={14} /></Button></div></div><CategoryEditor key={item.version} category={item} onUpdated={onUpdated} /></div> })}</div><div className="direct-list-actions"><Button onClick={() => void saveOrder()} disabled={busy || !dirty}>保存分类排序</Button>{error && <p className="admin-error" role="alert">{error}</p>}</div><CategoryCreate onUpdated={onUpdated} /></>
+  return <><p className="admin-panel-footnote">停用分类后，分类筛选会隐藏；其中已上架商品仍显示在“全部商品”。拖动排序柄或使用上下按钮调整位置后请保存排序。</p><div className="direct-admin-list">{ids.map((id, index) => { const item = initial.categories.find(category => category.id === id)!; return <div className="direct-admin-row" key={id} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); setIds(reposition(ids, event.dataTransfer.getData('text/plain'), id)) }}><div className="direct-row-heading"><span className="direct-drag-handle" draggable={!busy} title={`拖动排序 ${item.nameZh}`} onDragStart={event => event.dataTransfer.setData('text/plain', id)}><GripVertical size={16} /></span><strong>{item.nameZh}</strong><span>{item.active ? '显示中' : '已停用'} · {products.filter(product => product.categoryId === id).length} 件商品</span><div className="direct-move"><Button variant="outline" size="icon" aria-label={`上移 ${item.nameZh}`} disabled={busy || index === 0} onClick={() => setIds(move(ids, index, -1))}><ArrowUp size={14} /></Button><Button variant="outline" size="icon" aria-label={`下移 ${item.nameZh}`} disabled={busy || index === ids.length - 1} onClick={() => setIds(move(ids, index, 1))}><ArrowDown size={14} /></Button></div></div><CategoryEditor key={item.version} category={item} onUpdated={onUpdated} /></div> })}</div><div className="direct-list-actions"><Button onClick={() => void saveOrder()} disabled={busy || !dirty}>保存分类排序</Button>{error && <p className="admin-error" role="alert">{error}</p>}</div><CategoryCreate onUpdated={onUpdated} /></>
 }
 
 export function CategoryAdminPage({ revision, onUpdated }: { revision: number; onUpdated: () => void }) {
   const { data, error, loading } = useResource<List<Category>>('/api/admin/direct-store/categories', revision)
-  return <section className="admin-panel"><div className="admin-panel-title"><h2>商品分类</h2></div><Feedback error={error} loading={loading} data={data} />{data?.categories && <CategoryList key={`${data.orderVersion}:${data.categories.map(item => item.version).join(':')}`} initial={{ categories: data.categories, orderVersion: data.orderVersion }} onUpdated={onUpdated} />}</section>
+  const products = useResource<List<Product>>('/api/admin/direct-store/products', revision)
+  return <section className="admin-panel"><div className="admin-panel-title"><h2>商品分类</h2></div><Feedback error={error || products.error} loading={loading || products.loading} data={data && products.data} />{data?.categories && products.data?.products && <CategoryList key={`${data.orderVersion}:${data.categories.map(item => item.version).join(':')}`} initial={{ categories: data.categories, orderVersion: data.orderVersion }} products={products.data.products} onUpdated={onUpdated} />}</section>
 }
 
-function ProductEditor({ product, categories, onUpdated }: { product: Product; categories: Category[]; onUpdated: () => void }) {
+function ProductEditor({ product, categories, onUpdated, onPlans }: { product: Product; categories: Category[]; onUpdated: () => void; onPlans: () => void }) {
   const [nameZh, setNameZh] = useState(product.nameZh)
   const [nameEn, setNameEn] = useState(product.nameEn)
   const [descriptionZh, setDescriptionZh] = useState(product.descriptionZh)
@@ -148,11 +157,11 @@ function ProductEditor({ product, categories, onUpdated }: { product: Product; c
     <div className="direct-admin-fields"><label>所属分类<select value={categoryId} onChange={event => setCategoryId(event.target.value)} disabled={busy}>{categories.map(category => <option key={category.id} value={category.id}>{category.nameZh}{category.active ? '' : '（停用）'}</option>)}</select></label><label className="direct-checkbox"><input type="checkbox" checked={listed} onChange={event => setListed(event.target.checked)} disabled={busy} />前台上架</label></div>
     <label className="direct-field-title">商品图片</label><ImageInput url={imageUrl} onUpload={addImage} onRemove={() => { setImageMediaId(null); setImageUrl(null) }} busy={busy} />
     <p className="admin-subtle">不上传图片时继续显示原有商品插画。套餐价格在“商品与套餐”中调整。</p>
-    <Feedback error={error} /><Button type="submit" disabled={busy || !nameZh.trim()}><Save size={14} />{busy ? '保存中…' : '保存商品'}</Button>
+    <Feedback error={error} /><div className="direct-product-actions"><Button type="submit" disabled={busy || !nameZh.trim()}><Save size={14} />{busy ? '保存中…' : '保存商品'}</Button><Button type="button" variant="outline" onClick={onPlans}>编辑套餐售价</Button></div>
   </form>
 }
 
-function ProductList({ initial, categories, onUpdated }: { initial: { products: Product[]; orderVersion: number }; categories: Category[]; onUpdated: () => void }) {
+function ProductList({ initial, categories, onUpdated, onPlans }: { initial: { products: Product[]; orderVersion: number }; categories: Category[]; onUpdated: () => void; onPlans: () => void }) {
   const [ids, setIds] = useState(initial.products.map(item => item.id))
   const [editing, setEditing] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -163,11 +172,11 @@ function ProductList({ initial, categories, onUpdated }: { initial: { products: 
     try { await api('/api/admin/direct-store/products/order', { ids, version: initial.orderVersion }); onUpdated() }
     catch (cause) { setError(errorMessage(cause)) } finally { setBusy(false) }
   }
-  return <><p className="admin-panel-footnote">下架后，前台商品卡片和详情页将隐藏，新的直接购买会被拒绝；已有订单仍可处理。</p><div className="direct-admin-list">{ids.map((id, index) => { const item = initial.products.find(product => product.id === id)!; return <div className="direct-admin-row" key={id}><div className="direct-row-heading"><Package size={17} /><strong>{item.nameZh}</strong><span>{item.listed ? '已上架' : '已下架'} · {categories.find(category => category.id === item.categoryId)?.nameZh ?? item.categoryId}</span><div className="direct-move"><Button variant="outline" size="icon" aria-label={`上移 ${item.nameZh}`} disabled={busy || index === 0} onClick={() => setIds(move(ids, index, -1))}><ArrowUp size={14} /></Button><Button variant="outline" size="icon" aria-label={`下移 ${item.nameZh}`} disabled={busy || index === ids.length - 1} onClick={() => setIds(move(ids, index, 1))}><ArrowDown size={14} /></Button><Button variant="outline" onClick={() => setEditing(editing === id ? null : id)}>{editing === id ? '收起' : '编辑'}</Button></div></div>{editing === id && <ProductEditor key={item.version} product={item} categories={categories} onUpdated={onUpdated} />}</div> })}</div><div className="direct-list-actions"><Button onClick={() => void saveOrder()} disabled={busy || !dirty}>保存商品排序</Button>{error && <p className="admin-error" role="alert">{error}</p>}</div></>
+  return <><p className="admin-panel-footnote">下架后，前台商品卡片和详情页将隐藏，新的直接购买会被拒绝；已有订单仍可处理。拖动排序柄或使用上下按钮调整位置后请保存排序。</p><div className="direct-admin-list">{ids.map((id, index) => { const item = initial.products.find(product => product.id === id)!; return <div className="direct-admin-row" key={id} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); setIds(reposition(ids, event.dataTransfer.getData('text/plain'), id)) }}><div className="direct-row-heading"><span className="direct-drag-handle" draggable={!busy} title={`拖动排序 ${item.nameZh}`} onDragStart={event => event.dataTransfer.setData('text/plain', id)}><GripVertical size={16} /></span><Package size={17} /><strong>{item.nameZh}</strong><span>{item.listed ? '已上架' : '已下架'} · {categories.find(category => category.id === item.categoryId)?.nameZh ?? item.categoryId}</span><div className="direct-move"><Button variant="outline" size="icon" aria-label={`上移 ${item.nameZh}`} disabled={busy || index === 0} onClick={() => setIds(move(ids, index, -1))}><ArrowUp size={14} /></Button><Button variant="outline" size="icon" aria-label={`下移 ${item.nameZh}`} disabled={busy || index === ids.length - 1} onClick={() => setIds(move(ids, index, 1))}><ArrowDown size={14} /></Button><Button variant="outline" onClick={() => setEditing(editing === id ? null : id)}>{editing === id ? '收起' : '编辑'}</Button></div></div>{editing === id && <ProductEditor key={item.version} product={item} categories={categories} onUpdated={onUpdated} onPlans={onPlans} />}</div> })}</div><div className="direct-list-actions"><Button onClick={() => void saveOrder()} disabled={busy || !dirty}>保存商品排序</Button>{error && <p className="admin-error" role="alert">{error}</p>}</div></>
 }
 
-export function ProductAdminPage({ revision, onUpdated }: { revision: number; onUpdated: () => void }) {
+export function ProductAdminPage({ revision, onUpdated, onPlans }: { revision: number; onUpdated: () => void; onPlans: () => void }) {
   const products = useResource<List<Product>>('/api/admin/direct-store/products', revision)
   const categories = useResource<List<Category>>('/api/admin/direct-store/categories', revision)
-  return <section className="admin-panel"><div className="admin-panel-title"><h2>现有商品</h2><span>新增商品将在下一期开放</span></div><Feedback error={products.error || categories.error} loading={products.loading || categories.loading} data={products.data && categories.data} />{products.data?.products && categories.data?.categories && <ProductList key={`${products.data.orderVersion}:${products.data.products.map(item => item.version).join(':')}`} initial={{ products: products.data.products, orderVersion: products.data.orderVersion }} categories={categories.data.categories} onUpdated={onUpdated} />}</section>
+  return <section className="admin-panel"><div className="admin-panel-title"><h2>现有商品</h2><span>新增商品将在下一期开放</span></div><Feedback error={products.error || categories.error} loading={products.loading || categories.loading} data={products.data && categories.data} />{products.data?.products && categories.data?.categories && <ProductList key={`${products.data.orderVersion}:${products.data.products.map(item => item.version).join(':')}`} initial={{ products: products.data.products, orderVersion: products.data.orderVersion }} categories={categories.data.categories} onUpdated={onUpdated} onPlans={onPlans} />}</section>
 }

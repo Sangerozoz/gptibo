@@ -2,7 +2,7 @@ import { emailProduct, type AdminDelivery, type DeliverySummary } from '../share
 import { ApiError, body, json, type Env } from './platform.ts'
 import { getOrder, type Order } from './order-state.ts'
 import { alipayConfigured } from './payments/providers.ts'
-import { membershipDeliveryMessage, sendMembershipPreviewEmail, siteEmail } from './email.ts'
+import { directSiteEmail, membershipDeliveryMessage, sendMembershipPreviewEmail, siteEmail } from './email.ts'
 import { boundedResponseText } from './bounded-response.ts'
 import { adminLoginEmail } from './admin-auth.ts'
 
@@ -85,7 +85,8 @@ export async function emailDeliveryRoute(request: Request, env: Env, order: Orde
     const value = validateValue(product.kind, data.value)
     if (typeof data.instructions !== 'string' || !data.instructions.trim() || data.instructions.length > 2000) throw new ApiError('请填写 1–2000 字的领取说明。')
     const instructions = data.instructions.trim()
-    const payload = JSON.stringify({ from: env.RESEND_FROM, to: [order.customer_email], ...siteEmail(env, membershipDeliveryMessage(product.kind, order.id, value, instructions, order.plan)) })
+    const deliveryMessage = membershipDeliveryMessage(product.kind, order.id, value, instructions, order.plan)
+    const payload = JSON.stringify({ from: env.RESEND_FROM, to: [order.customer_email], ...(order.partner_id ? siteEmail(env, deliveryMessage) : await directSiteEmail(env, deliveryMessage)) })
     const event = crypto.randomUUID()
     await env.INTEREST_DB.batch([
       env.INTEREST_DB.prepare(`UPDATE orders SET version=version+1,updated_at=?,last_event_id=? WHERE id=? AND version=? AND ${eligibilitySql} AND NOT EXISTS(SELECT 1 FROM email_deliveries WHERE order_id=orders.id AND (status<>'draft' OR version<>?))`).bind(now, event, order.id, order.version, row?.version ?? -1),

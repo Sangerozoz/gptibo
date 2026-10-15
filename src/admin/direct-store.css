@@ -14,6 +14,8 @@
 .direct-row-heading { display:flex; align-items:center; gap:12px; min-height:38px; }
 .direct-row-heading strong { font-size:13px; font-weight:550; }
 .direct-row-heading>span { color:var(--muted-foreground); font-size:11px; }
+.direct-drag-handle { display:inline-flex; align-items:center; justify-content:center; cursor:grab; user-select:none; touch-action:none; }
+.direct-drag-handle:active { cursor:grabbing; }
 .direct-move { display:flex; align-items:center; gap:7px; margin-left:auto; }
 .direct-move button { height:32px; }
 .direct-move button[aria-label] { width:32px; }
@@ -26,4 +28,5 @@
 .direct-list-actions .admin-error { margin:0; }
 .direct-create { padding:18px 22px 22px; border-top:1px solid var(--border); }
 .direct-product-editor { padding:18px 0 0; }
+.direct-product-actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
 @media(max-width:700px) { .direct-admin-fields { grid-template-columns:1fr; } .direct-row-heading { flex-wrap:wrap; } .direct-move { width:100%; margin-left:0; } }

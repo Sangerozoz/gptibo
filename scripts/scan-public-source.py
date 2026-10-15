@@ -21,7 +21,11 @@ PUBLIC_HOSTS = {
     'www.w3.org', 'www.apache.org', 'ui.shadcn.com', 'transitions.dev', 'vite.dev',
     'www.duolingo.com', 'www.duolingo.cn', 'd35aaqx5ub95lt.cloudfront.net',
 }
-BINARY_ASSETS = {'public/email-logo.png', 'public/email-shop.png', 'src/assets/hero.png'}
+# User-supplied hero PNGs were checked for valid PNG structure and Exif tag IDs.
+BINARY_ASSETS = {'public/email-logo.png', 'public/email-shop.png', 'src/assets/hero.png',
+                 'public/hero-heads/lightning.png', 'public/hero-heads/pink-cap.png',
+                 'public/hero-heads/purple-cap.png', 'public/hero-heads/rainbow.png',
+                 'public/hero-heads/red-cap.png'}
 FORBIDDEN_PARTS = {'.git', '.secrets', '.imports', '.admin-auth', '.xgift-private',
                    'node_modules', 'dist', '.preview', '.wrangler', 'artifacts', '__pycache__'}
 FORBIDDEN_SUFFIXES = {'.pem', '.key', '.p12', '.pfx', '.sqlite', '.db', '.dump',
