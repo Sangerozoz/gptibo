@@ -135,7 +135,7 @@ function App() {
       {page === 'store' ? <><section className={`store-intro page-width reveal-in${platformBrand ? ' store-intro-platform' : ''}`}>
         {platformBrand ? <>
           <div className="store-intro-main">
-            <h1>{t('AI 服务安全透明')}</h1>
+            <h1>{locale === 'en' ? t('最稳定、最丰富的 AI 聚合平台') : <>最稳定、最丰富的 <span>AI 聚合平台</span></>}</h1>
             <p>{description}</p>
           </div>
           <div className="store-intro-art" aria-hidden="true">

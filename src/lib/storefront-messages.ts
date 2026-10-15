@@ -14,7 +14,7 @@ export const englishMessages: Readonly<Record<string, string>> = {
   '切换暗色模式': 'Switch to dark mode',
   '商店。': 'Store.',
   '找到适合你的服务。': 'Find your everyday essentials.',
-  'AI 服务安全透明': 'AI services, secure and transparent',
+  '最稳定、最丰富的 AI 聚合平台': 'The most stable and diverse AI hub',
   '浏览 AI 订阅、学习会员、邮箱账号与工具服务。查看套餐、价格和交付方式。': 'Explore AI subscriptions, learning memberships, email accounts and tools. Check plans, prices and delivery details.',
   'AI 订阅、语言学习与工具服务，在这里按需选择。': 'AI subscriptions, language learning and useful tools, all in one place.',
   '选购遇到问题？': 'Need help choosing?',
