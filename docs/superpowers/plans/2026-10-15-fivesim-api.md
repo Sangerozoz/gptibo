@@ -23,10 +23,10 @@
 
 **Interfaces:** Export `fivesimConfigured(env)`, `fivesimProfile(env)`, `fivesimPrices(env,country,product)`, `fivesimBuyActivation(env,request)`, `fivesimCheck(env,id)`, `fivesimFinish(env,id)`, and `fivesimCancel(env,id)`.
 
-- [ ] Write mock-fetch tests for authorization, exact official paths, parsed profile/order data, parameter validation, upstream failure, and lost purchase response.
-- [ ] Run `node --test tests/fivesim.test.ts`; verify expected failure before implementing.
-- [ ] Implement the smallest adapter satisfying those tests, with fixed HTTPS host, response size limit, timeout, and no retry.
-- [ ] Run focused tests and review error messages for secret leakage.
+- [x] Write mock-fetch tests for authorization, exact official paths, parsed profile/order data, parameter validation, upstream failure, and lost purchase response.
+- [x] Run `node --test tests/fivesim.test.ts`; verify expected failure before implementing.
+- [x] Implement the smallest adapter satisfying those tests, with fixed HTTPS host, response size limit, timeout, and no retry.
+- [x] Run focused tests and review error messages for secret leakage.
 
 ### Task 2: Admin status and presentation
 
@@ -34,11 +34,11 @@
 
 **Interfaces:** `GET /api/admin/fivesim/status` returns `{configured:false,connected:false}` without a token or `{configured:true,connected:true,balance:number}` after a successful profile read. Admin overview reports `integrations.fivesim` as a boolean.
 
-- [ ] Write tests that reject unauthenticated requests, avoid upstream calls without a token, and return only balance with a configured mock token.
-- [ ] Run focused tests and verify expected failure.
-- [ ] Add the authenticated route, rate limit it, add the configuration flag, and display a manual detection button in “服务接入”.
-- [ ] Document private token setup and the deferred product/Go backend scope.
-- [ ] Run focused tests, all tests, build, lint, `git diff --check`, inspect diff, commit, and push.
+- [x] Write tests that reject unauthenticated requests, avoid upstream calls without a token, and return only balance with a configured mock token.
+- [x] Run focused tests and verify expected failure.
+- [x] Add the authenticated route, rate limit it, add the configuration flag, and display a manual detection button in “服务接入”.
+- [x] Document private token setup and the deferred product/Go backend scope.
+- [x] Run focused tests, all tests, build, lint, `git diff --check`, inspect diff, commit, and push.
 
 ## Self-review
 

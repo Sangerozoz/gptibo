@@ -16,6 +16,7 @@ export async function limitApi(request: Request, env: Env, path: string): Promis
     || (request.method === 'POST' && /^\/api\/(partner|admin)\/invoices\/[^/]+\/payment$/.test(path))
     || (request.method === 'POST' && /^\/api\/admin\/orders\/[^/]+\/(platform-status|delivery|account_supplier)$/.test(path))
     || path.startsWith('/api/admin/account_supplier')
+    || (request.method === 'GET' && path === '/api/admin/fivesim/status')
   if (expensive && !(await env.EXPENSIVE_LIMITER.limit({ key: source })).success) {
     return json({ error: '刷新过于频繁，请一分钟后重试。' }, 429, { 'Retry-After': '60' })
   }

@@ -1,4 +1,5 @@
 import { isDeliverySupplierPlan } from './delivery_supplier/client.ts'
+import { fivesimConfigured, fivesimProfile } from './fivesim/client.ts'
 import { isXGiftPlan, xUsername } from '../shared/xgift-products.ts'
 import { recoverXGift, fulfillXGift, preflightXGift, xgiftCheckoutEnabled, xgiftSnapshot, xgiftSnapshotStatement, xgiftSummary } from './xgift/service.ts'
 import { xgiftAdmin } from './xgift/admin.ts'
@@ -240,6 +241,11 @@ export async function commerce(request: Request, env: Env): Promise<Response> {
 
 async function admin(request: Request, env: Env, url: URL): Promise<Response> {
   const path = url.pathname; const method = request.method; const db = env.INTEREST_DB
+  if (path === '/api/admin/fivesim/status' && method === 'GET') {
+    if (!fivesimConfigured(env)) return json({ configured: false, connected: false })
+    const profile = await fivesimProfile(env)
+    return json({ configured: true, connected: true, balance: profile.balance })
+  }
   if (path === '/api/admin/payments/reconcile' && method === 'POST') { await body(request); return json(await reconcilePayments(env)) }
   if (path === '/api/admin/recharge/reconcile' && method === 'POST') { await body(request); return json(await reconcileRecharge(env)) }
   if (path === '/api/admin/overview' && method === 'GET') {
@@ -248,7 +254,7 @@ async function admin(request: Request, env: Env, url: URL): Promise<Response> {
     const stats = await db.prepare("SELECT COUNT(*) total, SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END) pending, SUM(CASE WHEN status IN ('session','processing','failed') AND refunded_cents<price_cents THEN 1 ELSE 0 END) active, SUM(CASE WHEN status='success' THEN 1 ELSE 0 END) completed, COALESCE(SUM(CASE WHEN mode='demo' AND payment_status='simulated' THEN price_cents ELSE 0 END),0) demo_amount, COALESCE(SUM(CASE WHEN mode='live' AND payment_status='paid' THEN price_cents-MAX(refunded_cents,COALESCE((SELECT t.refunded_cents FROM recharge_orders t WHERE t.order_id=orders.id),0)) ELSE 0 END),0) paid_amount, COALESCE(SUM(CASE WHEN mode='live' THEN MAX(refunded_cents,COALESCE((SELECT t.refunded_cents FROM recharge_orders t WHERE t.order_id=orders.id),0)) ELSE 0 END),0) refund_amount FROM orders WHERE is_test=0").first()
     const interest = await db.prepare('SELECT COUNT(*) total FROM launch_interest').first()
     const recent = (await db.prepare('SELECT orders.*, (SELECT status FROM partner_payouts WHERE id=orders.payout_id) settlement_status FROM orders WHERE is_test=0 ORDER BY created_at DESC LIMIT 6').all<AdminOrder>()).results
-    return json({ stats, interest, recent: await Promise.all(recent.map(o => adminOrder(env, o))), integrations: { alipay: alipayConfigured(env), supplier: supplierConfigured(env), supplierCheckout: supplierCheckoutEnabled(env), resend: mailConfigured(env) }, mode: supplierCheckoutEnabled(env) ? 'live' : 'demo' })
+    return json({ stats, interest, recent: await Promise.all(recent.map(o => adminOrder(env, o))), integrations: { alipay: alipayConfigured(env), supplier: supplierConfigured(env), supplierCheckout: supplierCheckoutEnabled(env), resend: mailConfigured(env), fivesim: fivesimConfigured(env) }, mode: supplierCheckoutEnabled(env) ? 'live' : 'demo' })
   }
   if (path === '/api/admin/orders' && method === 'GET') {
     await settleDue(env)

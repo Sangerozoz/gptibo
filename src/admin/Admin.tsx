@@ -155,8 +155,9 @@ function IntegrationsPage({ revision }: { revision: number }) {
   return <div className="integration-workspace"><PaymentChannelsPanel revision={revision} /><div className="integration-services"><RechargeIntegrationsPage revision={revision} /><XGiftPanel revision={revision} /></div></div>
 }
 function RechargeIntegrationsPage({ revision }: { revision: number }) {
-  const { data, error, loading } = useResource<{ integrations: { resend: boolean; alipay: boolean; supplier: boolean; supplierCheckout: boolean } }>('/api/admin/overview', revision)
+  const { data, error, loading } = useResource<{ integrations: { resend: boolean; alipay: boolean; supplier: boolean; supplierCheckout: boolean; fivesim: boolean } }>('/api/admin/overview', revision)
   const [reconciling, setReconciling] = useState(false); const [result, setResult] = useState(''); const [syncError, setSyncError] = useState('')
+  const [checkingFiveSim, setCheckingFiveSim] = useState(false); const [fiveSimResult, setFiveSimResult] = useState(''); const [fiveSimError, setFiveSimError] = useState('')
   const running = useRef(false)
   const reconcile = async () => {
     if (running.current) return
@@ -165,17 +166,29 @@ function RechargeIntegrationsPage({ revision }: { revision: number }) {
     catch (e) { setSyncError(errorMessage(e)) }
     finally { running.current = false; setReconciling(false) }
   }
+  const checkFiveSim = async () => {
+    if (checkingFiveSim) return
+    setCheckingFiveSim(true); setFiveSimResult(''); setFiveSimError('')
+    try {
+      const status = await api<{ configured: boolean; connected: boolean; balance?: number }>('/api/admin/fivesim/status')
+      setFiveSimResult(status.connected ? `5SIM 连接正常，账户余额 ${status.balance}。` : '5SIM 密钥待配置。')
+    } catch (e) { setFiveSimError(errorMessage(e)) }
+    finally { setCheckingFiveSim(false) }
+  }
   const status = (ready: boolean | undefined) => !data ? error ? '暂不可用' : '读取中' : ready ? '已配置' : '待配置'
   const services = [
     { name: 'Recharge 平台代收 / 充值', detail: 'ChatGPT 收款与自动充值', state: data?.integrations.supplierCheckout ? '已开放' : status(data?.integrations.supplier), icon: Package },
     { name: 'Resend 邮件', detail: '登录验证码与订单邮件', state: status(data?.integrations.resend), icon: Mail },
-    { name: 'Codex 接码', detail: '接码供应商尚未接入', state: '待接入', icon: MessageCircle },
+    { name: 'Codex 接码 · 5SIM', detail: data?.integrations.fivesim ? '接口密钥已配置；商品尚未上架' : '接口已准备；密钥待配置，商品尚未上架', state: status(data?.integrations.fivesim), icon: MessageCircle },
   ]
   return <section className="integration-service-section">
     <div className="integration-section-title"><div><h2>业务服务</h2><p>充值、交付与通知服务的接入状态。</p></div><Button variant="outline" disabled={reconciling || !data?.integrations.supplier} onClick={() => void reconcile()}><RefreshCw size={14} className={reconciling ? 'integration-spinning' : undefined} />{reconciling ? '核对中…' : '核对充值订单'}</Button></div>
     <Feedback error={error || syncError} loading={loading} data={data} shape="compact" />
     {result && <p className="admin-success" role="status">{result}</p>}
     <div className="integration-service-rows">{services.map(({name, detail, state, icon: Icon}) => <div key={name}><div className="integration-service-icon"><Icon size={19} /></div><div><h3>{name}</h3><p>{detail}</p></div><span className={`connection-state ${['已配置', '已开放'].includes(state) ? 'is-ready' : ''}`}>{state}</span></div>)}</div>
+    <Button variant="outline" disabled={checkingFiveSim || !data?.integrations.fivesim} onClick={() => void checkFiveSim()}>{checkingFiveSim ? '检测中…' : '检测 5SIM 连接'}</Button>
+    {fiveSimResult && <p className="admin-success" role="status">{fiveSimResult}</p>}
+    {fiveSimError && <p className="admin-error" role="alert">{fiveSimError}</p>}
   </section>
 }
 export default function Admin() {

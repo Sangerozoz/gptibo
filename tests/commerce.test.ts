@@ -58,6 +58,28 @@ async function accountingOrder(s: Awaited<ReturnType<typeof setup>>, buyer: stri
   return order.id as string
 }
 
+test('5SIM admin connection check is authenticated, read-only, and does not expose credentials', async t => {
+  const s = await setup(); t.after(() => s.db.close())
+  assert.equal((await s.request('/api/admin/fivesim/status')).status, 401)
+  const admin = await s.login()
+  const fetch = t.mock.method(globalThis, 'fetch', async (url: string | URL | Request, options?: RequestInit) => {
+    assert.equal(String(url), 'https://5sim.net/v1/user/profile')
+    assert.equal(new Headers(options?.headers).get('Authorization'), 'Bearer private-five-sim-key')
+    return Response.json({ id: 9, email: 'supplier-private@example.test', balance: 42.75, frozen_balance: 0 })
+  })
+  assert.deepEqual(await (await s.request('/api/admin/fivesim/status', undefined, admin)).json(), { configured: false, connected: false })
+  assert.equal(fetch.mock.callCount(), 0)
+  assert.equal((await (await s.request('/api/admin/overview', undefined, admin)).json()).integrations.fivesim, false)
+  s.env.FIVESIM_API_TOKEN = 'private-five-sim-key'
+  const response = await s.request('/api/admin/fivesim/status', undefined, admin)
+  assert.equal(response.status, 200)
+  const payload = await response.json()
+  assert.deepEqual(payload, { configured: true, connected: true, balance: 42.75 })
+  assert.doesNotMatch(JSON.stringify(payload), /private-five-sim-key|supplier-private/)
+  assert.equal(fetch.mock.callCount(), 1)
+  assert.equal((await (await s.request('/api/admin/overview', undefined, admin)).json()).integrations.fivesim, true)
+})
+
 test('verification settings are public when this worker has no Turnstile', async t => {
   const s = await setup(); t.after(() => s.db.close())
   for (const path of ['/api/orders/verification', '/api/orders/verification?purpose=auth']) {

@@ -54,3 +54,6 @@ ACCOUNT_SUPPLIER_CHECKOUT_ENABLED="false"
 DELIVERY_SUPPLIER_API_KEY= # Configure locally; never commit a real value.
 DELIVERY_SUPPLIER_CHECKOUT_ENABLED=false
 DELIVERY_SUPPLIER_CNY_PER_USD= # Configure locally; never commit a real value.
+
+# 5SIM protocol key. Server-side only; Codex SMS checkout remains disabled.
+FIVESIM_API_TOKEN= # Configure locally; never commit a real value.
