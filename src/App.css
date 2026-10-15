@@ -401,6 +401,7 @@ body:has(.catalog) #main-content { min-height:calc(100svh - 290px); }
 .dark .code-slots>span:not(.code-cursor) { border-color:#555; color:#eee; }
 .dark .code-slots .code-cursor { background:#bbb; }
 .detail-intro { padding-top:30px; padding-bottom:30px; }
+.direct-detail-image { display:block; width:min(100%,560px); max-height:280px; object-fit:contain; margin-top:20px; border-radius:16px; }
 .product-breadcrumb { display:flex; align-items:center; gap:10px; font-size:12px; color:var(--muted-foreground); margin-bottom:22px; }
 .product-breadcrumb a { padding-block:8px; }
 .product-breadcrumb a:hover { color:var(--primary); }

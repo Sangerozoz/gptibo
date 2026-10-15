@@ -10,7 +10,7 @@ import type { useStore } from '@/lib/use-store'
 
 export type PurchasePlan = Omit<ReturnType<typeof productPlans>[number], 'price'> & { price: number; enabled: boolean }
 type Props = {
-  product: typeof PRODUCTS[number]; plans: PurchasePlan[]; plan: PurchasePlan; selected: PlanId
+  product: Pick<typeof PRODUCTS[number], 'id'> & { name: string; tagline: string; badge: string; pitch: string; quantity: string; unit: string; method: string }; plans: PurchasePlan[]; plan: PurchasePlan; selected: PlanId
   store: Pick<ReturnType<typeof useStore>, 'busy' | 'ready' | 'checkoutEnabled'> & Partial<Pick<ReturnType<typeof useStore>, 'catalog'>>
   setSelected: (id: PlanId) => void; beginPurchase: () => void; help: () => void; onGuide: () => void
 }

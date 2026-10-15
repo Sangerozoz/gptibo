@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ProductMark } from '@/components/brand'
-import { translateStorefront } from '@/lib/storefront-locale'
 import { ShopBrand } from '@/components/shop-brand'
 import { RecoveryDialog } from '@/components/order-services'
 import { SupportContactsDialog } from '@/components/support-contacts'
@@ -20,6 +19,7 @@ import { orderLabel, ORDER_PLANS, type OrderAction, type PlanId } from '@/lib/de
 import { applyAppearance } from '@/lib/appearance'
 import { useScrollReveal } from '@/lib/use-scroll-reveal'
 import { useStore } from '@/lib/use-store'
+import { localized, productCopy } from '@/lib/direct-store-display'
 import { canonicalStorefrontUrl, storefrontHref } from '@/lib/storefront-routing'
 import { trackVisitor } from '@/lib/visitor-tracking'
 import { isClosedHomepage } from '@/components/site-closed'
@@ -62,15 +62,15 @@ function App() {
   const store = useStore(page)
   const partnerSlug = store.partner?.slug
   const platformBrand = store.catalogReady && !store.partner
-  const brandName = store.partner?.brandName || (platformBrand ? locale === 'en' ? 'MEGHAN' : '硅基生物' : t('商店'))
-  const brandLogo = store.partner?.logo || ''
+  const brandName = store.partner?.brandName || (platformBrand ? store.directStore ? localized(store.directStore.site.nameZh, store.directStore.site.nameEn, locale) : locale === 'en' ? 'MEGHAN' : '硅基生物' : t('商店'))
+  const brandLogo = store.partner?.logo || store.directStore?.site.logoUrl || ''
   const pageTitle = store.partner?.pageTitle
   const description = store.partner?.description || (platformBrand ? t('浏览 AI 订阅、学习会员、邮箱账号与工具服务。查看套餐、价格和交付方式。') : t('AI 订阅、语言学习与工具服务，在这里按需选择。'))
   useEffect(() => {
     document.querySelector('meta[name="description"]')?.setAttribute('content', description)
-    document.title = pageTitle || (platformBrand ? translateStorefront(locale, '硅基生物 · 会员订阅与工具服务') : brandName)
+    document.title = pageTitle || (platformBrand ? `${brandName} · ${locale === 'en' ? 'Subscriptions & tools' : '会员订阅与工具服务'}` : brandName)
     const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]')
-    if (icon) { icon.href = brandLogo || (platformBrand ? '/favicon.svg' : '/brands/shop.svg'); icon.type = brandLogo ? 'image/png' : 'image/svg+xml' }
+    if (icon) { icon.href = brandLogo || (platformBrand ? '/favicon.svg' : '/brands/shop.svg'); icon.type = brandLogo ? '' : 'image/svg+xml' }
   }, [brandName, platformBrand, brandLogo, locale, pageTitle, description])
   const { orders } = store
   const [activeId, setActiveId] = useState<string>()
@@ -79,7 +79,10 @@ function App() {
   const [noticeOpen, setNoticeOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all')
-  const product = PRODUCTS.find(p => page === 'product/' + p.id) ?? PRODUCTS[0]
+  const baseProduct = PRODUCTS.find(p => page === 'product/' + p.id) ?? PRODUCTS[0]
+  const directProduct = store.directStore?.products.find(item => item.id === baseProduct.id)
+  const displayCopy = directProduct ? productCopy(directProduct, locale) : null
+  const product = { ...baseProduct, name: displayCopy?.name ?? baseProduct.name, tagline: displayCopy?.description ?? baseProduct.tagline }
   const productHidden = store.hiddenProductIds.includes(product.id)
   const isDetail = page === 'product/' + product.id
   const plans = productPlans(product.id).map(p => { const offer = store.catalog.find(item => item.id === p.id); return { ...p, price: offer ? offer.price_cents / 100 : p.price, enabled: Boolean(offer?.enabled) } })
@@ -149,8 +152,8 @@ function App() {
           <div><h1>{store.partner?.headline || <>{t('商店。')}<span>{t('找到适合你的服务。')}</span></>}</h1><p>{description}</p></div>
           <div className="store-intro-support"><span>{t('选购遇到问题？')}</span><Button variant="ghost" onClick={openSupport}>{t('联系支持')}<ArrowRight size={14} /></Button></div>
         </>}
-        </section><ProductCatalog catalogReady={store.catalogReady} error={store.error} hiddenProductIds={store.hiddenProductIds} productOrder={store.productOrder} offers={store.catalog} onHelp={help} onOrders={() => navigate('orders')} onNavigate={navigate} /></> : isDetail && productHidden ? <section className="empty-orders page-width"><h1>{t('该商品已下架')}</h1><p>{t('商店暂不销售此商品，已有订单可在「我的订单」中继续处理。')}</p><Button onClick={() => navigate('store')}>{t('返回商店')}</Button></section> : isDetail ? <>
-        <section className="detail-intro page-width reveal-in"><nav className="product-breadcrumb" aria-label="当前位置"><a href={storefrontHref('store')} onClick={event => { if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; event.preventDefault(); navigate('store') }}>全部商品</a><ChevronRight size={13} /><span aria-current="page">{product.name}</span></nav><h1>{product.name}</h1><p>{product.tagline}</p></section>
+        </section><ProductCatalog catalogReady={store.catalogReady} error={store.error} hiddenProductIds={store.hiddenProductIds} productOrder={store.productOrder} directStore={store.directStore} offers={store.catalog} onHelp={help} onOrders={() => navigate('orders')} onNavigate={navigate} /></> : isDetail && productHidden ? <section className="empty-orders page-width"><h1>{t('该商品已下架')}</h1><p>{t('商店暂不销售此商品，已有订单可在「我的订单」中继续处理。')}</p><Button onClick={() => navigate('store')}>{t('返回商店')}</Button></section> : isDetail ? <>
+        <section className="detail-intro page-width reveal-in"><nav className="product-breadcrumb" aria-label="当前位置"><a href={storefrontHref('store')} onClick={event => { if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; event.preventDefault(); navigate('store') }}>全部商品</a><ChevronRight size={13} /><span aria-current="page">{product.name}</span></nav><h1>{product.name}</h1><p>{product.tagline}</p>{directProduct?.imageUrl && <img className="direct-detail-image" src={directProduct.imageUrl} alt={product.name} />}</section>
         <PurchaseWorkspace product={product} plans={plans} plan={plan} selected={selected} store={store} setSelected={setSelected} beginPurchase={beginPurchase} help={help} onGuide={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'auto' })} />
         {isXGift ? <section className="delivery-guide page-width" id="how-it-works" aria-label="充值流程">{[['01', '填写用户名', '输入 @ 用户名，验证账号。'], ['02', '确认账号并付款', '确认账号，通过支付宝付款。'], ['03', '等待到账', '自动处理，进度随时可查。']].map(([n, title, text]) => <article key={n}><small>{n} / 账号充值</small><h3>{title}</h3><p>{text}</p></article>)}</section> : isEmailProduct ? <section className="delivery-guide page-width" id="how-it-works" aria-label="邮件交付流程">{[['01', isGmail ? '选择账号并付款' : '选择会员并付款', '填写能够正常接收邮件的邮箱，核对购买说明后完成支付。'], ['02', isGmail ? '付款后自动发货' : '等待工作人员发货', product.method + '，发货状态会同步到原订单。'], ['03', isGmail ? '查收资料，登录账号' : '查看邮件，完成领取', isGmail ? '在购买当天按邮件说明首次登录，遇到问题及时通过原订单联系支持。' : '按邮件中的说明领取或兑换，遇到问题可通过原订单联系支持。']].map(([n, title, text]) => <article key={n}><small>{n} / 邮件交付</small><h3>{title}</h3><p>{text}</p></article>)}</section> : isSms ? <section data-scroll-reveal className="how-section page-width" id="how-it-works"><div className="section-heading"><span className="section-kicker">简单三步</span><h2>从选择，到开始。</h2><p>每一步都清楚，每个结果都可查。</p></div><div className="how-grid">{[
           { n: '01', icon: CreditCard, title: isSms ? SMS_STEPS[0] : '选择并付款', text: '选好适合自己的计划，通过支付宝完成订单付款。' },
