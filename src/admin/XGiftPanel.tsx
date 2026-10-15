@@ -53,7 +53,7 @@ export function XGiftPanel({ revision }: { revision: number }) {
           </p>
         ))}
       <p className="integration-footnote">
-        商品销售开关在「商品与套餐」中管理。
+        商品销售开关在「套餐与定价」中管理。
       </p>
     </section>
   )
