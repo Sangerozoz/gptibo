@@ -28,7 +28,7 @@ import { customerRoutes } from './customers.ts'
 import { invoiceRoutes } from './invoices.ts'
 import { publicAnnouncement } from './announcements.ts'
 import { rechargeReminderPreview } from './recharge-reminders.ts'
-import { directMediaRoute, directStoreAdminRoute, isDirectProductListed, publicDirectStore } from './direct-store.ts'
+import { directMediaRoute, directStoreAdminRoute, isDirectProductListed, publicDirectStore, uploadDirectMedia } from './direct-store.ts'
 import { adminGmailOrder, confirmGmailNotPurchased, fulfillGmail, gmailCheckoutEnabled, gmailProductsRoute, gmailSnapshot, gmailSnapshotStatement } from './account_supplier/service.ts'
 
 type Plan = { delivery_instructions: string; partner_enabled: number; id: string; product_id: string; name: string; price_cents: number; enabled: number; renewal_only: number; version: number }
@@ -86,6 +86,7 @@ export async function commerce(request: Request, env: Env): Promise<Response> {
       if (path.startsWith('/api/admin/accounting')) return await accountingRoutes(request, env, url)
       if (path === '/api/admin/visitors' && method === 'GET') return json(await adminVisitorSummary(env, url))
       if (path === '/api/admin/support-contacts') return await supportContactsRoute(request, env)
+      if (path === '/api/admin/support-contacts/media') return await uploadDirectMedia(request, env)
       if (path.startsWith('/api/admin/direct-store/')) return await directStoreAdminRoute(request, env, path)
       if (path.startsWith('/api/admin/payments/test')) return await paymentTesting(request, env, url)
       if (path.startsWith('/api/admin/refunds')) return await adminRefunds(request, env, url)

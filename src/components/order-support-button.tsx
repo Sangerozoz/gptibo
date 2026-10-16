@@ -71,10 +71,10 @@ export function OrderSupportButton({
     return () => { cancelAnimationFrame(frame); observer.disconnect(); window.removeEventListener('resize', reveal) }
   }, [guided, disabled])
   const channels = contacts ? [
-    { key: 'wechat', label: '微信', value: contacts.wechat, icon: WeChatIcon, isLink: false },
-    { key: 'qq', label: 'QQ', value: contacts.qq, icon: QQIcon, isLink: false },
-    { key: 'email', label: '邮箱', value: contacts.email, icon: Mail, isLink: true },
-  ].filter(channel => channel.value) : []
+    { key: 'wechat', label: '微信', value: contacts.wechat, qrUrl: contacts.wechatQrUrl, icon: WeChatIcon, isLink: false },
+    { key: 'qq', label: 'QQ', value: contacts.qq, qrUrl: contacts.qqQrUrl, icon: QQIcon, isLink: false },
+    { key: 'email', label: '邮箱', value: contacts.email, qrUrl: undefined, icon: Mail, isLink: true },
+  ].filter(channel => channel.value || channel.qrUrl) : []
 
   return (
     <div className="order-support-anchor" data-guided={guided && !disabled || undefined}>
@@ -150,7 +150,7 @@ export function OrderSupportButton({
                       </div>
                       <div className="order-support-channel-info">
                         <span className="order-support-channel-label">{channel.label}</span>
-                        {channel.isLink ? (
+                        {channel.value && (channel.isLink ? (
                           <a
                             href={'mailto:' + encodeURIComponent(channel.value)}
                             className="order-support-channel-value order-support-channel-link"
@@ -162,16 +162,17 @@ export function OrderSupportButton({
                           <span className="order-support-channel-value" title={channel.value}>
                             {channel.value}
                           </span>
-                        )}
+                        ))}
                       </div>
-                      <CopyButton
+                      {channel.value && <CopyButton
                         variant="ghost"
                         size="icon-sm"
                         iconOnly
                         label={'复制' + channel.label}
                         title={'复制' + channel.label}
                         value={channel.value}
-                      />
+                      />}
+                      {channel.qrUrl && <a className="order-support-channel-qr" href={channel.qrUrl} target="_blank" rel="noopener noreferrer" aria-label={'打开' + channel.label + '二维码'}><img src={channel.qrUrl} alt={channel.label + '二维码'} width="152" height="152" /></a>}
                     </div>
                   )
                 })}

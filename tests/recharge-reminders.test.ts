@@ -92,7 +92,7 @@ test('overlapping schedulers claim a reminder only once and skip submission duri
   s.order('race')
   const original = s.env.INTEREST_DB.prepare.bind(s.env.INTEREST_DB)
   t.mock.method(s.env.INTEREST_DB,'prepare',(sql:string)=>{
-    if(sql.startsWith('SELECT wechat,qq,email,version')) s.db.prepare("UPDATE orders SET status='processing',started_at=? WHERE id='race'").run(NOW)
+    if(sql.startsWith('SELECT wechat,qq,email,')) s.db.prepare("UPDATE orders SET status='processing',started_at=? WHERE id='race'").run(NOW)
     return original(sql)
   })
   await sendDueRechargeReminders(s.env); assert.equal(s.mails.length,1)

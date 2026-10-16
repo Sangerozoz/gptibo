@@ -919,7 +919,7 @@ test('platform support contacts require admin access, persist and expose only ex
   assert.equal((await s.request('/api/admin/support-contacts', { ...contacts, version: 0 }, admin, 'https://evil.test')).status, 403)
   const response = await s.request('/api/admin/support-contacts', { ...contacts, version: 0 }, admin)
   assert.equal(response.status, 200)
-  const expected = { contacts: { wechat: 'recharge_support', qq: '12345678', email: 'support@example.test' }, version: 1 }
+  const expected = { contacts: { wechat: 'recharge_support', qq: '12345678', email: 'support@example.test' }, qrMediaIds: { wechat: null, qq: null }, version: 1 }
   assert.deepEqual(await response.json(), expected)
   assert.deepEqual(await (await s.request('/api/admin/support-contacts', undefined, admin)).json(), expected)
   const catalogResponse = await s.request('/api/catalog')
@@ -928,6 +928,51 @@ test('platform support contacts require admin access, persist and expose only ex
   assert.equal((await s.request('/api/admin/support-contacts', { ...empty, version: 0 }, admin)).status, 409)
   assert.equal((await s.request('/api/admin/support-contacts', { ...empty, version: 1 }, admin)).status, 200)
   assert.deepEqual((await (await s.request('/api/catalog')).json()).supportContacts, empty)
+})
+
+test('contact QR uploads require shop access and appear only on the owning storefront until removed', async t => {
+  const s = await setup(); t.after(() => s.db.close())
+  const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/tc8AAAAASUVORK5CYII='
+  const image = 'data:image/png;base64,' + png
+  assert.equal((await s.request('/api/admin/support-contacts/media', { image })).status, 401)
+  assert.equal((await s.request('/api/partner/support-contacts/media', { image })).status, 401)
+  const admin = await s.login()
+  assert.equal((await s.request('/api/admin/support-contacts/media', { image }, admin, 'https://evil.test')).status, 403)
+  assert.equal((await s.request('/api/admin/support-contacts/media', { image: 'data:image/png;base64,' + 'A'.repeat(80) }, admin)).status, 400)
+  const uploaded = await s.request('/api/admin/support-contacts/media', { image }, admin)
+  assert.equal(uploaded.status, 201)
+  const media = await uploaded.json()
+  assert.match(media.url, /^\/api\/direct-media\/[a-f0-9-]{36}$/)
+  const publicImage = await s.request(media.url)
+  assert.equal(publicImage.status, 200)
+  assert.equal(publicImage.headers.get('Content-Type'), 'image/png')
+  assert.deepEqual(Buffer.from(await publicImage.arrayBuffer()), Buffer.from(png, 'base64'))
+  assert.equal((await s.request('/api/admin/support-contacts', { wechat: '', qq: '', email: '', wechatQrMediaId: 'missing', version: 0 }, admin)).status, 400)
+  const saved = await s.request('/api/admin/support-contacts', { wechat: '', qq: '', email: '', wechatQrMediaId: media.id, version: 0 }, admin)
+  assert.equal(saved.status, 200)
+  assert.deepEqual(await saved.json(), { contacts: { wechat: '', qq: '', email: '', wechatQrUrl: media.url }, qrMediaIds: { wechat: media.id, qq: null }, version: 1 })
+  assert.deepEqual((await (await s.request('/api/catalog')).json()).supportContacts, { wechat: '', qq: '', email: '', wechatQrUrl: media.url })
+  assert.equal((await s.request('/api/admin/support-contacts', { wechat: 'help', qq: '', email: '', version: 1 }, admin)).status, 200)
+  assert.equal((await (await s.request('/api/catalog')).json()).supportContacts.wechatQrUrl, media.url)
+  assert.equal((await s.request('/api/admin/support-contacts', { wechat: 'help', qq: '', email: '', wechatQrMediaId: null, version: 2 }, admin)).status, 200)
+  assert.deepEqual((await (await s.request('/api/catalog')).json()).supportContacts, { wechat: 'help', qq: '', email: '' })
+})
+
+test('partner can upload and manage its own contact QR without changing platform contacts', async t => {
+  const s = await setup(); t.after(() => s.db.close()); const admin = await s.login()
+  const first = await seedPartner(s, admin, 'ABCDEF')
+  const own = await mockPartnerMail(t, s).login('ABCDEF@example.test')
+  const image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/tc8AAAAASUVORK5CYII='
+  const uploaded = await s.request('/api/partner/support-contacts/media', { image }, own)
+  assert.equal(uploaded.status, 201)
+  const media = await uploaded.json()
+  const saved = await s.request('/api/partner/support-contacts', { wechat: '', qq: '12345678', email: '', qqQrMediaId: media.id, version: 0 }, own)
+  assert.equal(saved.status, 200)
+  assert.deepEqual((await (await s.request('/api/catalog?partner=ABCDEF')).json()).supportContacts, { wechat: '', qq: '12345678', email: '', qqQrUrl: media.url })
+  assert.deepEqual((await (await s.request('/api/catalog')).json()).supportContacts, { wechat: '', qq: '', email: '' })
+  const preview = await (await s.request('/api/admin/partners/' + first + '/support-contacts', undefined, admin)).json()
+  assert.equal(preview.qrMediaIds.qq, media.id)
+  assert.equal(preview.contacts.qqQrUrl, media.url)
 })
 
 test('partner announcements are private until enabled, isolated by authenticated shop and previewed read-only', async t => {

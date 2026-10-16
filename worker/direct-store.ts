@@ -39,7 +39,7 @@ const boolField = (value: unknown, label: string) => {
   if (typeof value !== 'boolean') throw new ApiError(`请选择有效的${label}。`)
   return Number(value)
 }
-const mediaField = async (env: Env, value: unknown) => {
+export const mediaField = async (env: Env, value: unknown) => {
   if (value === null) return null
   if (typeof value !== 'string' || !/^[a-f0-9-]{36}$/.test(value) || !await env.INTEREST_DB.prepare('SELECT id FROM direct_media WHERE id=?').bind(value).first()) throw new ApiError('图片无效，请重新上传。')
   return value
@@ -101,12 +101,7 @@ async function ordered(env: Env, kind: 'categories' | 'products', data: Record<s
 export async function directStoreAdminRoute(request: Request, env: Env, path: string): Promise<Response> {
   const db = env.INTEREST_DB, method = request.method
   if (path === '/api/admin/direct-store/media') {
-    if (method !== 'POST') throw new ApiError('请求方式不支持。', 405)
-    const data = await body(request, 500000)
-    const { mime, base64 } = imageBytes(data.image)
-    const id = crypto.randomUUID()
-    await db.prepare('INSERT INTO direct_media(id,mime,base64,created_at) VALUES (?,?,?,?)').bind(id, mime, base64, Date.now()).run()
-    return json({ id, url: directMediaUrl(id) }, 201)
+    return uploadDirectMedia(request, env)
   }
   if (path === '/api/admin/direct-store/site') {
     if (method === 'GET') {
@@ -187,6 +182,15 @@ export async function directStoreAdminRoute(request: Request, env: Env, path: st
     return json({ product: productView(row!) })
   }
   throw new ApiError('未找到直营设置接口。', 404)
+}
+
+export async function uploadDirectMedia(request: Request, env: Env): Promise<Response> {
+  if (request.method !== 'POST') throw new ApiError('请求方式不支持。', 405)
+  const data = await body(request, 500000)
+  const { mime, base64 } = imageBytes(data.image)
+  const id = crypto.randomUUID()
+  await env.INTEREST_DB.prepare('INSERT INTO direct_media(id,mime,base64,created_at) VALUES (?,?,?,?)').bind(id, mime, base64, Date.now()).run()
+  return json({ id, url: directMediaUrl(id) }, 201)
 }
 
 export async function isDirectProductListed(env: Env, id: string) {

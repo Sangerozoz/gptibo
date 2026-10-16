@@ -15,6 +15,8 @@
 .success-contact-channel .copy-control>button { width:36px; height:44px; border-radius:8px; color:var(--muted-foreground); }
 .success-contact-channel .copy-control[data-state=copied]>button { color:var(--primary); }
 .success-contact-channel .copy-feedback { font-size:10px; }
+.success-contact-qr { grid-column:1/-1; justify-self:start; display:block; width:136px; height:136px; margin:2px 0 8px 68px; padding:5px; border:1px solid var(--border); border-radius:9px; background:#fff; }
+.success-contact-qr img { display:block; width:100%; height:100%; object-fit:contain; }
 .live-success-with-contacts>.result-receipt { margin-top:24px; }
 .live-success-with-contacts>.primary-action { margin-top:20px; }
 /* Use the actual pane width, including when the after-sales drawer is open. */
@@ -24,6 +26,7 @@
   .success-contacts { grid-template-rows:1fr; animation:none; }
   .success-contacts-heading { padding-top:0; }
   .success-contact-channel { grid-template-columns:50px minmax(0,1fr) 36px; gap:8px; }
+  .success-contact-qr { margin-left:58px; }
 }
 @keyframes success-summary-left { from { transform:translateX(calc(50cqw - 50%)); } to { transform:translateX(0); } }
 @keyframes success-contacts-unfold { from { grid-template-rows:0fr; } to { grid-template-rows:1fr; } }

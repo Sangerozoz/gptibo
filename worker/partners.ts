@@ -6,6 +6,7 @@ import { emailValue, mailConfigured, partnerLimit, requirePartner, sendPartnerIn
 import { referralCodePattern } from '../shared/partner-link.ts'
 import { provisionPartner } from './partner-provision.ts'
 import { supportContactsRoute, supportContactsSettings } from './support-contacts.ts'
+import { uploadDirectMedia } from './direct-store.ts'
 import { announcementRoute, announcementSettings } from './announcements.ts'
 import { defaultSupplyRoute } from './partner-default-prices.ts'
 import { visitorSummary } from './visitors.ts'
@@ -74,6 +75,7 @@ export async function partnerRoutes(request: Request, env: Env, url: URL) {
   const p = await requirePartner(request, env); const path = url.pathname; const db = env.INTEREST_DB
   if (path === '/api/partner/visitors' && request.method === 'GET') return json(await visitorSummary(env, url, p.id))
   if (path === '/api/partner/support-contacts') return supportContactsRoute(request, env, p)
+  if (path === '/api/partner/support-contacts/media') return uploadDirectMedia(request, env)
   if (path === '/api/partner/announcement') return announcementRoute(request, env, p)
   if (path === '/api/partner/product-order') return productOrderRoute(request, env, p)
   if (path === '/api/partner/dashboard' && request.method === 'GET') return json(await partnerDashboard(env, p))
