@@ -21,6 +21,14 @@
 .direct-product-row { background:var(--card); }
 .direct-product-row[data-dragging] { position:relative; z-index:2; box-shadow:0 14px 32px #0003; }
 .direct-product-row .direct-drag-handle { width:28px; height:32px; }
+.direct-product-heading { display:grid; grid-template-columns:28px 17px minmax(0,1fr) 64px minmax(80px,112px) auto; grid-template-areas:"handle icon name status category actions"; }
+.direct-product-heading>.direct-drag-handle { grid-area:handle; }
+.direct-product-icon { grid-area:icon; }
+.direct-product-name { grid-area:name; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.direct-product-status { grid-area:status; justify-self:start; }
+.direct-product-status.unavailable { color:var(--warning); background:var(--warning-bg); }
+.direct-product-heading>.direct-product-category { grid-area:category; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted-foreground); font-size:11px; }
+.direct-product-heading>.direct-move { grid-area:actions; margin-left:0; justify-self:end; }
 .direct-row-heading>span { color:var(--muted-foreground); font-size:11px; }
 .direct-drag-handle { display:inline-flex; flex:none; align-items:center; justify-content:center; width:16px; height:24px; padding:0; border:0; background:none; color:var(--muted-foreground); cursor:grab; user-select:none; touch-action:none; }
 .direct-drag-handle:active { cursor:grabbing; }
@@ -61,4 +69,5 @@
 .direct-product-empty { margin:0; padding:16px; color:var(--muted-foreground); font-size:12px; }
 @media(max-width:700px) { .direct-admin-fields { grid-template-columns:1fr; } .direct-row-heading { flex-wrap:wrap; } .direct-move { width:100%; margin-left:0; } }
 @media(max-width:700px) { .direct-category-heading { flex-wrap:nowrap; } .direct-category-heading .direct-move { width:auto; margin-left:auto; } }
+@media(max-width:700px) { .direct-product-heading { grid-template-columns:28px 17px minmax(0,1fr) auto; grid-template-areas:"handle icon name actions" ". . status category"; row-gap:6px; } .direct-product-heading>.direct-move { width:auto; } }
 @media(max-width:760px) { .admin-shell .direct-category-heading .direct-move [data-slot=button] { width:32px; height:32px; min-height:32px; } }

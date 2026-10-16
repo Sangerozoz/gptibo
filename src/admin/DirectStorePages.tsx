@@ -213,10 +213,11 @@ function ProductEditor({ product, categories, onUpdated, onClose }: { product: P
 function SortableProductRow({ item, categoryName, expanded, editing, busy, revision, partnerModeEnabled, categories, onExpand, onEdit, onUpdated, onCloseEditor }: { item: Product; categoryName: string; expanded: boolean; editing: boolean; busy: boolean; revision: number; partnerModeEnabled: boolean; categories: Category[]; onExpand: () => void; onEdit: () => void; onUpdated: () => void; onCloseEditor: () => void }) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: item.id, disabled: busy })
   return <div ref={setNodeRef} className="direct-admin-row direct-product-row" data-dragging={isDragging || undefined} style={{ transform: CSS.Translate.toString(transform), transition }}>
-    <div className="direct-row-heading">
+    <div className="direct-row-heading direct-product-heading">
       <button type="button" ref={setActivatorNodeRef} className="direct-drag-handle" title={`拖动排序 ${item.nameZh}`} aria-label={`拖动排序 ${item.nameZh}`} disabled={busy} {...attributes} {...listeners}><GripVertical size={16} /></button>
-      <Package size={17} /><strong>{item.nameZh}</strong>
-      <span>{item.listed ? '已上架' : '已下架'} · {categoryName}</span>
+      <Package className="direct-product-icon" size={17} /><strong className="direct-product-name" title={item.nameZh}>{item.nameZh}</strong>
+      <span className={`admin-pill direct-product-status ${item.listed ? 'available' : 'unavailable'}`}>{item.listed ? '已上架' : '已下架'}</span>
+      <span className="direct-product-category" title={categoryName}>{categoryName}</span>
       <div className="direct-move">
         <Button variant="outline" size="icon" aria-label={`${expanded ? '收起' : '展开'} ${item.nameZh} 套餐与售价`} aria-expanded={expanded} onClick={onExpand}>{expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</Button>
         <Button variant="outline" onClick={onEdit}>编辑</Button>
