@@ -4,8 +4,8 @@ import { Check, Copy, LoaderCircle, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import '@/styles/interaction-polish.css'
 
-type Props = Omit<ComponentProps<typeof Button>, 'onClick' | 'children'> & { value: string; label: string; iconOnly?: boolean }
-export function CopyButton({ value, label, iconOnly, size, ...props }: Props) {
+type Props = Omit<ComponentProps<typeof Button>, 'onClick' | 'children'> & { value: string; label: string; iconOnly?: boolean; textOnly?: boolean }
+export function CopyButton({ value, label, iconOnly, textOnly, size, ...props }: Props) {
   const { t } = useStorefrontI18n()
   const [result, setResult] = useState<{ value: string; status: 'pending' | 'copied' | 'error' }>()
   const locked = useRef(false)
@@ -25,10 +25,10 @@ export function CopyButton({ value, label, iconOnly, size, ...props }: Props) {
   }
   const Icon = status === 'copied' ? Check : status === 'error' ? TriangleAlert : status === 'pending' ? LoaderCircle : Copy
   return <span className="copy-control" data-state={status}>
-    <Button {...props} size={size ?? (iconOnly ? 'icon' : 'sm')} aria-label={iconOnly ? status === 'copied' ? t('已复制') : label : undefined} disabled={props.disabled || status === 'pending'} onClick={() => void copy()}>
-      <Icon size={15} className={status === 'pending' ? 'processing-spinner' : undefined} />
-      {!iconOnly && <span className="copy-label"><span data-hidden={status === 'copied'} aria-hidden={status === 'copied'}>{label}</span><span data-hidden={status !== 'copied'} aria-hidden={status !== 'copied'}>{t('已复制')}</span></span>}
+    <Button {...props} size={size ?? (iconOnly ? 'icon' : 'sm')} aria-label={iconOnly || textOnly ? status === 'copied' ? t('已复制') : label : undefined} disabled={props.disabled || status === 'pending'} onClick={() => void copy()}>
+      {!textOnly && <Icon size={15} className={status === 'pending' ? 'processing-spinner' : undefined} />}
+      {textOnly ? value : !iconOnly && <span className="copy-label"><span data-hidden={status === 'copied'} aria-hidden={status === 'copied'}>{label}</span><span data-hidden={status !== 'copied'} aria-hidden={status !== 'copied'}>{t('已复制')}</span></span>}
     </Button>
-    <span className={status === 'error' || (iconOnly && status === 'copied') ? 'copy-feedback' : 'sr-only'} role={status === 'error' ? 'alert' : 'status'}>{status === 'copied' ? t('已复制') : status === 'error' ? t('复制失败，请手动选取') : ''}</span>
+    <span className={status === 'error' || ((iconOnly || textOnly) && status === 'copied') ? 'copy-feedback' : 'sr-only'} role={status === 'error' ? 'alert' : 'status'}>{status === 'copied' ? t('已复制') : status === 'error' ? t('复制失败，请手动选取') : ''}</span>
   </span>
 }

@@ -158,6 +158,8 @@ export function OrderSupportButton({
                           >
                             {channel.value}
                           </a>
+                        ) : channel.key === 'wechat' ? (
+                          <CopyButton textOnly type="button" variant="ghost" className="order-support-channel-value order-support-channel-value-copy" value={channel.value} label={'复制' + channel.label} title={'复制' + channel.label} />
                         ) : (
                           <span className="order-support-channel-value" title={channel.value}>
                             {channel.value}

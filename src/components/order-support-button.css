@@ -365,6 +365,10 @@
   background: color-mix(in srgb, var(--success) 12%, transparent);
   transform: scale(1.05);
 }
+.order-support-channel-info .copy-control { display:block; max-width:100%; }
+.order-support-channel-card .order-support-channel-info .copy-control > .order-support-channel-value-copy { width:auto; max-width:100%; height:auto; min-height:24px; padding:0; justify-content:flex-start; border-radius:3px; background:transparent; text-align:left; white-space:normal; }
+.order-support-channel-card .order-support-channel-info .copy-control > .order-support-channel-value-copy:hover { background:transparent; color:var(--primary); text-decoration:underline; }
+.order-support-channel-card .order-support-channel-info .copy-control > .order-support-channel-value-copy:active { transform:none; }
 
 /* Empty State */
 .order-support-empty {

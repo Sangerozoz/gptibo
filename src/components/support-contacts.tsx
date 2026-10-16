@@ -83,7 +83,7 @@ export function SupportContactsDialog({ open, onOpenChange, contacts, name, erro
     <div className="support-contact-body">
       {!contacts ? <><Feedback error={error ? t(error) : undefined} loading={!error} shape="compact" />{error && <Button variant="outline" onClick={onRetry}>{t('重新读取')}</Button>}</> : channels.length ? <dl className="support-contact-list">{channels.map(item => <div className="support-contact-row" key={item.key}>
         <dt>{t(item.label)}</dt>
-        {item.value && <dd>{item.key === 'email' ? <a href={'mailto:' + encodeURIComponent(item.value)}>{item.value}</a> : item.value}</dd>}
+        {item.value && <dd>{item.key === 'email' ? <a href={'mailto:' + encodeURIComponent(item.value)}>{item.value}</a> : item.key === 'wechat' ? <CopyButton textOnly type="button" variant="ghost" className="support-contact-value-copy" value={item.value} label={t('复制{channel}', { channel: t(item.label) })} title={t('复制{channel}', { channel: t(item.label) })} /> : item.value}</dd>}
         {item.value && <CopyButton className="support-contact-copy" variant="ghost" size="icon" iconOnly label={t('复制{channel}', { channel: t(item.label) })} title={t('复制{channel}', { channel: t(item.label) })} value={item.value} />}
         {item.qrUrl && <div className="support-contact-qr"><img src={item.qrUrl} alt={t('{channel}二维码', { channel: t(item.label) })} width="168" height="168" /></div>}
       </div>)}</dl> : <div className="support-contact-empty"><p>{t('商店暂未提供联系方式')}</p><span>{t('已有订单可在“我的订单”查看进度或申请售后。')}</span></div>}

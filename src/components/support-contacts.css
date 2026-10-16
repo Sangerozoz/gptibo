@@ -29,6 +29,9 @@
 .support-contact-list a { color:var(--foreground); text-decoration:none; }
 .support-contact-list a:hover { color:var(--primary); text-decoration:underline; }
 .support-contact-copy { width:44px; height:44px; color:var(--muted-foreground); }
+.support-contact-row dd .copy-control { max-width:100%; }
+.support-contact-row .support-contact-value-copy { min-height:24px; height:auto; max-width:100%; padding:0; justify-content:flex-start; background:transparent; color:inherit; font:inherit; text-align:left; white-space:normal; overflow-wrap:anywhere; }
+.support-contact-row .support-contact-value-copy:hover { background:transparent; color:var(--primary); text-decoration:underline; }
 .support-contact-qr { grid-column:1/-1; justify-self:start; display:block; width:168px; height:168px; margin:4px 0 8px 52px; padding:6px; border:1px solid var(--border); border-radius:10px; background:#fff; }
 .support-contact-qr img { display:block; width:100%; height:100%; object-fit:contain; }
 .support-contact-list .copy-control[data-state=copied] .support-contact-copy { color:var(--success); }

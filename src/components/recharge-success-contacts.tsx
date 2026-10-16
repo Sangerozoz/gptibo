@@ -20,7 +20,7 @@ export function RechargeSuccessContacts({ contacts, name }: { contacts?: Support
           const Icon = channel.icon
           return <div key={channel.key} className="success-contact-channel" style={{ '--contact-delay': `${600 + index * 150}ms` } as CSSProperties}>
             <dt><Icon size={14} aria-hidden="true" />{channel.label}</dt>
-            {channel.value && <dd>{channel.key === 'email' ? <a href={'mailto:' + encodeURIComponent(channel.value)}>{channel.value}</a> : channel.value}</dd>}
+            {channel.value && <dd>{channel.key === 'email' ? <a href={'mailto:' + encodeURIComponent(channel.value)}>{channel.value}</a> : channel.key === 'wechat' ? <CopyButton textOnly type="button" variant="ghost" className="success-contact-value-copy" value={channel.value} label={'复制' + channel.label} title={'复制' + channel.label} /> : channel.value}</dd>}
             {channel.value && <CopyButton iconOnly variant="ghost" size="icon" value={channel.value} label={'复制' + channel.label} title={'复制' + channel.label} />}
             {channel.qrUrl && <div className="success-contact-qr"><img src={channel.qrUrl} alt={channel.label + '二维码'} width="136" height="136" /></div>}
           </div>
