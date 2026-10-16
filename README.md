@@ -49,12 +49,16 @@ go vet ./...
 ## Cloudflare 本地运行
 
 ```sh
-cp .dev.vars.example .dev.vars
+npm run admin:setup
 npx wrangler d1 migrations apply gptibo-local --local
 npm run preview:worker
 ```
 
-`.dev.vars` 仅保存在本机。管理员需要自行设置 `ADMIN_USERNAME`、`ADMIN_EMAIL` 和独立的 Base32 `ADMIN_TOTP_SECRET`；邮件验证还需要邮件服务凭据和认证密钥，空配置不会启用登录。示例中的认证秘密不能复用测试向量。
+`admin:setup` 会询问管理员用户名、邮箱、已验证的 Resend 发件地址和 Resend API Key，生成独立的验证器密钥并给出导入地址。将地址导入验证器后保存好；之后从 `/admin` 使用邮箱验证码和验证器验证码登录。现有 `.dev.vars` 中其他配置及有效的验证器密钥会保留，重复运行不会让原验证器失效。该文件只保存在本机，不会通过 Git 传到另一台电脑；在另一台电脑启动时要重新配置，或者通过可信的私密渠道转移已有 `.dev.vars`。不要把密钥提交到仓库。Resend 发件地址需要先在自己的账号中完成验证，脚本不会创建邮件服务账号。
+
+若前端地址是 `http://127.0.0.1:5173/admin`，它的 `/api` 请求由 Vite 转发至本机 `127.0.0.1:8787` 的 Worker。配置 `.dev.vars` 后必须重启 Worker，再在登录页点击“已配置，重新检查”；仅启动或重启 Vite 不会加载新配置。没有 Resend 凭据时无法完成当前管理员登录。
+
+想同时使用 Vite 热更新时，在另一个终端运行 `npm run dev`；保持上面的 `npm run preview:worker` 继续运行。
 
 ### 直营商店管理（Worker / D1）
 

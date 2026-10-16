@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "npm run emails:build && node --test tests/*.test.ts",
     "preview:worker": "npm run build && wrangler dev",
+    "admin:setup": "node scripts/admin-setup.mjs",
     "emails:build": "tsc -p tsconfig.emails.json && tsx --tsconfig tsconfig.emails.json scripts/build-emails.tsx",
     "emails:preview": "npm run emails:build -- --preview",
     "emails:dev": "email dev --dir emails --port 3002",
