@@ -31,7 +31,7 @@ import { rechargeReminderPreview } from './recharge-reminders.ts'
 import { directMediaRoute, directStoreAdminRoute, isDirectProductListed, publicDirectStore, uploadDirectMedia } from './direct-store.ts'
 import { adminGmailOrder, confirmGmailNotPurchased, fulfillGmail, gmailCheckoutEnabled, gmailProductsRoute, gmailSnapshot, gmailSnapshotStatement } from './account_supplier/service.ts'
 
-type Plan = { delivery_instructions: string; partner_enabled: number; id: string; product_id: string; name: string; price_cents: number; enabled: number; renewal_only: number; version: number }
+type Plan = { delivery_instructions: string; partner_enabled: number; display_label: string; id: string; product_id: string; name: string; price_cents: number; enabled: number; renewal_only: number; version: number }
 type OrderPartnerSource = { id: string; slug: string; name: string; email: string; wechat: string; qq: string }
 const statuses: Status[] = ['pending', 'session', 'processing', 'success', 'failed', 'cancelled']
 const publicOrder = (o: Order) => ({ purchaseNote: o.purchase_note ?? '', isTest: Boolean(o.is_test), customerEmail: o.customer_email, refundedCents: o.refunded_cents, refundHold: Boolean(o.refund_hold), redemptionBlocked: Boolean(o.redemption_blocked), id: o.id, plan: o.plan, planName: o.plan_name, partnerName: o.partner_name ?? undefined, price: o.price_cents / 100, mode: o.mode, paymentStatus: o.payment_status, status: o.status, createdAt: o.created_at, updatedAt: o.updated_at, startedAt: o.started_at ?? undefined, smsPhone: o.sms_phone ?? undefined, version: o.version })
@@ -340,6 +340,7 @@ async function admin(request: Request, env: Env, url: URL): Promise<Response> {
   if (planMatch && method === 'POST') {
     const data = await body(request); const note = requiredNote(data)
     if (!Number.isSafeInteger(data.priceCents) || Number(data.priceCents) < 1 || Number(data.priceCents) > 10000000 || typeof data.enabled !== 'boolean' || !Number.isInteger(data.version)) throw new ApiError('价格或商品状态无效。')
+    if (data.displayLabel !== undefined && (typeof data.displayLabel !== 'string' || Array.from(data.displayLabel.trim()).length > 20 || Array.from(data.displayLabel).some(char => { const code = char.codePointAt(0)!; return code < 32 || code === 127 }))) throw new ApiError('套餐标签最多 20 个字符，不能包含控制字符。')
     if (data.partnerEnabled !== undefined && typeof data.partnerEnabled !== 'boolean') throw new ApiError('代理销售设置无效。')
     if ((data.purchaseNote !== undefined && (typeof data.purchaseNote !== 'string' || data.purchaseNote.length > 2000)) || (data.deliveryInstructions !== undefined && (typeof data.deliveryInstructions !== 'string' || data.deliveryInstructions.length > 2000))) throw new ApiError('商品说明最多 2000 字。')
     const plan = await db.prepare('SELECT * FROM catalog_plans WHERE id=?').bind(planMatch[1]).first<Plan>()
@@ -349,7 +350,7 @@ async function admin(request: Request, env: Env, url: URL): Promise<Response> {
     // Audit insert and update share a transaction and the same version guard.
     await db.batch([
       db.prepare('INSERT INTO admin_audit(id,action,target_id,note,created_at) SELECT ?,?,?,?,? FROM catalog_plans WHERE id=? AND version=?').bind(eventId, 'plan-update', plan.id, `${env.ADMIN_USERNAME}: ${plan.price_cents}→${data.priceCents}; enabled ${plan.enabled}→${Number(data.enabled)}; ${note}`, Date.now(), plan.id, plan.version),
-      db.prepare('UPDATE catalog_plans SET price_cents=?,enabled=?,purchase_note=COALESCE(?,purchase_note),delivery_instructions=COALESCE(?,delivery_instructions),partner_enabled=COALESCE(?,partner_enabled),version=version+1,updated_at=? WHERE id=? AND version=?').bind(Number(data.priceCents), Number(data.enabled), typeof data.purchaseNote === 'string' ? data.purchaseNote.trim() : null, typeof data.deliveryInstructions === 'string' ? data.deliveryInstructions.trim() : null, typeof data.partnerEnabled === 'boolean' ? Number(data.partnerEnabled) : null, Date.now(), plan.id, plan.version),
+      db.prepare('UPDATE catalog_plans SET price_cents=?,enabled=?,display_label=COALESCE(?,display_label),purchase_note=COALESCE(?,purchase_note),delivery_instructions=COALESCE(?,delivery_instructions),partner_enabled=COALESCE(?,partner_enabled),version=version+1,updated_at=? WHERE id=? AND version=?').bind(Number(data.priceCents), Number(data.enabled), typeof data.displayLabel === 'string' ? data.displayLabel.trim() : null, typeof data.purchaseNote === 'string' ? data.purchaseNote.trim() : null, typeof data.deliveryInstructions === 'string' ? data.deliveryInstructions.trim() : null, typeof data.partnerEnabled === 'boolean' ? Number(data.partnerEnabled) : null, Date.now(), plan.id, plan.version),
     ])
     if (!await db.prepare('SELECT id FROM admin_audit WHERE id=?').bind(eventId).first()) throw new ApiError('套餐已更新，请刷新后重试。', 409)
     return json({ ok: true })

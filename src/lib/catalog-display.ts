@@ -1,5 +1,9 @@
 import type { CatalogPlan } from './api.ts'
 
+export function catalogPlanDisplayLabel(planId: string, offer?: Pick<CatalogPlan, 'display_label'>): string {
+  return offer?.display_label ?? (planId === 'plus' ? '日常之选' : '')
+}
+
 const subscriptionTiers = [{ id: 'plus', name: 'Plus' }, { id: 'pro-5x', name: 'Pro 5×' }, { id: 'pro-20x', name: 'Pro 10×' }, { id: 'pro-25x', name: 'Pro 25×' }]
 export function catalogSubscriptionPlans(offers: CatalogPlan[]) {
   return subscriptionTiers.map(tier => {

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Checkbox } from '@base-ui/react/checkbox'
-import { Check, Settings2 } from 'lucide-react'
+import { Check, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -66,11 +66,12 @@ function PlanEditor({ plan, onClose, onUpdated, partnerModeEnabled }: { plan: Ca
 
 function PlanRow({ plan, onUpdated, onSettings }: { plan: CatalogPlan; onUpdated: () => void; onSettings: () => void }) {
   const [price, setPrice] = useState(String(plan.price_cents / 100))
+  const [label, setLabel] = useState(plan.display_label ?? '')
   const [enabled, setEnabled] = useState(Boolean(plan.enabled))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const priceCents = parsePlanPrice(price)
-  const dirty = priceCents !== plan.price_cents || enabled !== Boolean(plan.enabled)
+  const dirty = priceCents !== plan.price_cents || enabled !== Boolean(plan.enabled) || label.trim() !== (plan.display_label ?? '')
 
   async function save() {
     if (busy || !dirty) return
@@ -78,12 +79,16 @@ function PlanRow({ plan, onUpdated, onSettings }: { plan: CatalogPlan; onUpdated
       setError('请输入 0.01–100000 元的价格，最多两位小数。')
       return
     }
+    if (Array.from(label.trim()).length > 20) {
+      setError('套餐标签最多 20 个字符。')
+      return
+    }
     setBusy(true)
     setError('')
     try {
       await api(`/api/admin/plans/${plan.id}`, {
-        priceCents, enabled, version: plan.version,
-        note: planUpdateNote(plan, { priceCents, enabled }),
+        priceCents, enabled, displayLabel: label.trim(), version: plan.version,
+        note: planUpdateNote(plan, { priceCents, enabled, displayLabel: label.trim() }),
       })
       onUpdated()
     } catch (cause) {
@@ -95,10 +100,10 @@ function PlanRow({ plan, onUpdated, onSettings }: { plan: CatalogPlan; onUpdated
 
   return <tr>
     <td>{plan.name}</td>
-    <td className="direct-plan-price"><label><span className="sr-only">{plan.name} 售价（元）</span><span>¥</span><Input value={price} onChange={event => { setPrice(event.target.value); setError('') }} inputMode="decimal" disabled={busy} aria-invalid={Boolean(error && priceCents === null)} /></label><small>/ {emailProduct(plan.id)?.duration ?? (plan.product_id === 'chatgpt' ? '月' : '次')}</small></td>
+    <td className="direct-plan-label"><label><span className="sr-only">{plan.name} 标签</span><Input value={label} onChange={event => { setLabel(event.target.value); setError('') }} placeholder="无标签" maxLength={20} disabled={busy} /></label></td>
+    <td className="direct-plan-price"><label><span className="sr-only">{plan.name} 售价（元）</span><span>¥</span><Input value={price} onChange={event => { setPrice(event.target.value); setError('') }} inputMode="decimal" disabled={busy} aria-invalid={Boolean(error && priceCents === null)} /><small>/ {emailProduct(plan.id)?.duration ?? (plan.product_id === 'chatgpt' ? '月' : '次')}</small></label></td>
     <td><label className="direct-plan-availability"><input type="checkbox" checked={enabled} onChange={event => setEnabled(event.target.checked)} disabled={busy} aria-label={`${plan.name} 套餐上架`} /><span>{enabled ? '已上架' : '已下架'}</span></label></td>
-    <td>{plan.renewal_only ? '仅续费' : '常规服务'}</td>
-    <td><div className="direct-plan-actions"><Button type="button" variant="outline" aria-label={`保存 ${plan.name} 套餐`} disabled={busy || !dirty} onClick={() => void save()}>{busy ? '保存中…' : '保存'}</Button><Button type="button" variant="ghost" size="icon" aria-label={`其他设置 ${plan.name}`} disabled={busy || dirty} onClick={onSettings}><Settings2 size={15} /></Button></div>{error && <p className="admin-error" role="alert">{error}</p>}</td>
+    <td><div className="direct-plan-actions"><Button type="button" variant="outline" aria-label={`保存 ${plan.name} 套餐`} disabled={busy || !dirty} onClick={() => void save()}>{busy ? '保存中…' : '保存'}</Button><Button type="button" variant="ghost" size="icon" title={`编辑 ${plan.name} 其他设置`} aria-label={`编辑 ${plan.name} 其他设置`} disabled={busy || dirty} onClick={onSettings}><Pencil size={15} /></Button></div>{error && <p className="admin-error" role="alert">{error}</p>}</td>
   </tr>
 }
 
@@ -113,7 +118,7 @@ export function ProductPlans({ productId, productName, listed, revision, onUpdat
     <div className="direct-product-plan-heading"><h3>套餐与售价</h3><Button type="button" onClick={() => setCreateOpen(true)}>新增</Button></div>
     <p className="admin-subtle">只有商品已上架且套餐允许创建新订单时，客户才可购买。{listed ? '' : '当前商品已下架。'}</p>
     <Feedback error={error} loading={loading} data={data} />
-    {data && (selection.plans.length ? <div className="admin-table-scroll"><table className="admin-table"><thead><tr><th>套餐</th><th>售价（元）</th><th>上架状态</th><th>适用范围</th><th><span className="sr-only">操作</span></th></tr></thead><tbody>{selection.plans.map(plan => <PlanRow key={`${plan.id}:${plan.version}`} plan={plan} onUpdated={onUpdated} onSettings={() => setEdit(plan)} />)}</tbody></table></div> : <p className="direct-product-empty">该商品暂无套餐。新增套餐需先接入下单与交付流程。</p>)}
+    {data && (selection.plans.length ? <div className="admin-table-scroll"><table className="admin-table"><thead><tr><th>套餐</th><th>标签</th><th>售价（元）</th><th>上架状态</th><th><span className="sr-only">操作</span></th></tr></thead><tbody>{selection.plans.map(plan => <PlanRow key={`${plan.id}:${plan.version}`} plan={plan} onUpdated={onUpdated} onSettings={() => setEdit(plan)} />)}</tbody></table></div> : <p className="direct-product-empty">该商品暂无套餐。新增套餐需先接入下单与交付流程。</p>)}
     {selection.plans.length > 0 && <div className="direct-product-plan-audit">
       <h3>套餐修改记录</h3>
       <Feedback error={audit.error} loading={audit.loading} data={audit.data} shape="compact" />

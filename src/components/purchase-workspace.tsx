@@ -8,7 +8,7 @@ import type { PRODUCTS, productPlans } from '@/lib/products'
 import type { PlanId } from '@/lib/demo-orders'
 import type { useStore } from '@/lib/use-store'
 
-export type PurchasePlan = Omit<ReturnType<typeof productPlans>[number], 'price'> & { price: number; enabled: boolean }
+export type PurchasePlan = Omit<ReturnType<typeof productPlans>[number], 'price'> & { price: number; enabled: boolean; displayLabel: string }
 type Props = {
   product: Pick<typeof PRODUCTS[number], 'id'> & { name: string; tagline: string; badge: string; pitch: string; quantity: string; unit: string; method: string }; plans: PurchasePlan[]; plan: PurchasePlan; selected: PlanId
   store: Pick<ReturnType<typeof useStore>, 'busy' | 'ready' | 'checkoutEnabled'> & Partial<Pick<ReturnType<typeof useStore>, 'catalog'>>
@@ -29,7 +29,7 @@ export function PurchaseWorkspace({ product, plans, plan, selected, store, setSe
             {isEmail && !isGmail && <MembershipScene productId={product.id as 'gemini' | 'duolingo'} />}
             <div className="plan-label"><span>选择适合你的计划</span><span>{isXGift ? '一次购买' : isEmail ? '一次购买 · ' + product.quantity : isSms ? '按次购买' : '按月订阅'}</span></div>
             <RadioGroup value={plan.id} onValueChange={v => setSelected(v as PlanId)} className={`plan-options ${plans.length === 1 ? 'single-plan' : 'subscription-plans'}`} aria-label="商品套餐">
-              {plans.map(p => <label key={p.id} className={`plan-option ${plan.id === p.id ? 'is-selected' : ''}`}><div className="plan-option-top"><RadioGroupItem value={p.id} disabled={!p.enabled} id={`plan-${p.id}`} aria-label={`${product.name} ${p.name}${p.renewalOnly ? '，仅续费' : ''}`} /><span>{p.name}</span>{p.renewalOnly ? <Badge variant="outline" className="renewal-badge">仅续费</Badge> : p.id === 'plus' && <span className="recommend-label">日常之选</span>}</div><p>{p.enabled ? p.description : '暂停售卖'}</p><div className="plan-price"><span>¥</span><strong>{p.price}</strong><span>/ {product.unit}</span></div></label>)}
+              {plans.map(p => <label key={p.id} className={`plan-option ${plan.id === p.id ? 'is-selected' : ''}`}><div className="plan-option-top"><RadioGroupItem value={p.id} disabled={!p.enabled} id={`plan-${p.id}`} aria-label={`${product.name} ${p.name}${p.renewalOnly ? '，仅续费' : ''}`} /><span>{p.name}</span>{p.renewalOnly && <Badge variant="outline" className="renewal-badge">仅续费</Badge>}{p.displayLabel && <span className="recommend-label">{p.displayLabel}</span>}</div><p>{p.enabled ? p.description : '暂停售卖'}</p><div className="plan-price"><span>¥</span><strong>{p.price}</strong><span>/ {product.unit}</span></div></label>)}
             </RadioGroup>
             <div className="plan-features" key={`features-${selected}`}>{plan.features.map(text => <span key={text}><Check size={14} />{text}</span>)}</div>
             {isEmail && purchaseNote && <p className="membership-purchase-note">{purchaseNote}</p>}{isXGift && <p className="membership-purchase-note">通过 X 官方赠送方式开通，付款前请核对用户名。</p>}<div className="product-bottom"><ShieldCheck size={15} /><span>{isXGift ? '无需提供密码' : isGmail ? '付款后自动邮件发货' : isEmail ? '人工处理 · 邮件发货' : isSms ? '单次短信接码' : plan.renewalOnly ? '仅限已有订阅续费' : '自有账号开通'}</span><span className="dot-separator">·</span><span>订单进度可查</span><button className="text-button" onClick={help}>购买须知 <ChevronRight size={13} /></button></div>

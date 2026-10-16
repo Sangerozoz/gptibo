@@ -13,6 +13,7 @@ import { StoreAnnouncement } from '@/components/announcement-dialog'
 import { PurchaseFlow } from '@/components/purchase-flow'
 import { ProductCatalog } from '@/components/product-catalog'
 import { PurchaseWorkspace } from '@/components/purchase-workspace'
+import { catalogPlanDisplayLabel } from '@/lib/catalog-display'
 import { RechargeGuide } from '@/components/recharge-guide'
 import { PRODUCTS, SMS_STEPS, productPlans, productForPlan, readPage } from '@/lib/products'
 import { orderLabel, ORDER_PLANS, type OrderAction, type PlanId } from '@/lib/demo-orders'
@@ -85,7 +86,7 @@ function App() {
   const product = { ...baseProduct, name: displayCopy?.name ?? baseProduct.name, tagline: displayCopy?.description ?? baseProduct.tagline }
   const productHidden = store.hiddenProductIds.includes(product.id)
   const isDetail = page === 'product/' + product.id
-  const plans = productPlans(product.id).map(p => { const offer = store.catalog.find(item => item.id === p.id); return { ...p, price: offer ? offer.price_cents / 100 : p.price, enabled: Boolean(offer?.enabled) } })
+  const plans = productPlans(product.id).map(p => { const offer = store.catalog.find(item => item.id === p.id); return { ...p, price: offer ? offer.price_cents / 100 : p.price, enabled: Boolean(offer?.enabled), displayLabel: catalogPlanDisplayLabel(p.id, offer) } })
   const plan = plans.find(p => p.id === selected) ?? plans.find(p => p.id === product.defaultPlan)!
   const [purchaseDraft, setPurchaseDraft] = useState<{ plan: PlanId; price: number; purchaseNote?: string; supportsWarranty?: boolean }>(() => ({ plan: plan.id, price: plan.price }))
   const isGmail = product.id === 'gmail'

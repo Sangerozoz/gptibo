@@ -13,6 +13,7 @@ import { toString as qrToString } from 'qrcode'
 import type { ServerOrder } from '@/lib/use-store'
 import { PRODUCTS, productPlans } from '@/lib/products'
 import type { CatalogPlan } from '@/lib/api'
+import { catalogPlanDisplayLabel } from '@/lib/catalog-display'
 import '@/App.css'
 import '@/styles/motion.css'
 import '@/styles/catalog-conversion.css'
@@ -48,7 +49,7 @@ export function RechargeSitePreview() {
     return () => window.removeEventListener('message', receive)
   }, [])
   const product = PRODUCTS[0]
-  const plans = productPlans('chatgpt').map(plan => ({ ...plan, price: (scene.offers.find(offer => offer.id === plan.id)?.price_cents ?? plan.price * 100) / 100, enabled: Boolean(scene.offers.find(offer => offer.id === plan.id)?.enabled ?? true) }))
+  const plans = productPlans('chatgpt').map(plan => ({ ...plan, price: (scene.offers.find(offer => offer.id === plan.id)?.price_cents ?? plan.price * 100) / 100, enabled: Boolean(scene.offers.find(offer => offer.id === plan.id)?.enabled ?? true), displayLabel: catalogPlanDisplayLabel(plan.id, scene.offers.find(offer => offer.id === plan.id)) }))
   const selected = scene.view === 'package' && scene.phase < 2 && !scene.reduced ? 'pro-5x' : 'plus'
   const plan = plans.find(plan => plan.id === selected)!
   const payment = scene.view === 'payment'

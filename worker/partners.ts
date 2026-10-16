@@ -26,7 +26,7 @@ export async function resolvePartner(env: Env, slug: unknown) {
   return p
 }
 export async function partnerCatalog(env: Env, p: Partner) {
-  const rows = (await env.INTEREST_DB.prepare('SELECT c.id,c.product_id,c.name,c.purchase_note,pp.price_cents,CASE WHEN c.partner_enabled=1 THEN c.enabled ELSE 0 END enabled,c.renewal_only,pp.version FROM catalog_plans c JOIN partner_prices pp ON pp.plan=c.id WHERE pp.partner_id=? ORDER BY c.rowid').bind(p.id).all<{ product_id: string }>()).results
+  const rows = (await env.INTEREST_DB.prepare('SELECT c.id,c.product_id,c.name,c.display_label,c.purchase_note,pp.price_cents,CASE WHEN c.partner_enabled=1 THEN c.enabled ELSE 0 END enabled,c.renewal_only,pp.version FROM catalog_plans c JOIN partner_prices pp ON pp.plan=c.id WHERE pp.partner_id=? ORDER BY c.rowid').bind(p.id).all<{ product_id: string }>()).results
   const { productIds, hiddenProductIds = [] } = await productOrderSettings(env, p.id)
   return { plans: rows.filter(row => !hiddenProductIds.some(id => id === row.product_id)), productOrder: productIds, hiddenProductIds, partner: { name: p.name, slug: p.slug }, mode: 'demo' }
 }

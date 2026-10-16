@@ -32,4 +32,4 @@ export async function api<T>(path: string, data?: unknown, signal?: AbortSignal)
   return result as T
 }
 export const errorMessage = (e: unknown) => e instanceof RequestError ? e.message : '网络暂时不可用，请稍后重试。'
-export type CatalogPlan = { has_coupons?: boolean; supports_warranty?: boolean; partner_enabled?: number; purchase_note?: string; delivery_instructions?: string; id: string; product_id: string; name: string; price_cents: number; enabled: number; renewal_only: number; version: number }
+export type CatalogPlan = { has_coupons?: boolean; supports_warranty?: boolean; partner_enabled?: number; purchase_note?: string; delivery_instructions?: string; display_label?: string; id: string; product_id: string; name: string; price_cents: number; enabled: number; renewal_only: number; version: number }

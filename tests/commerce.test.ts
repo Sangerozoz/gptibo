@@ -58,6 +58,34 @@ async function accountingOrder(s: Awaited<ReturnType<typeof setup>>, buyer: stri
   return order.id as string
 }
 
+test('plan display labels start with Plus, save through admin, and reach direct and partner catalogs', async t => {
+  const s = await setup(); t.after(() => s.db.close())
+  const initialCatalog = (await (await s.request('/api/catalog')).json()).plans
+  const initial = initialCatalog.find((plan: { id: string }) => plan.id === 'plus')
+  assert.equal(initial.display_label, '日常之选')
+  assert.equal(initialCatalog.find((plan: { id: string }) => plan.id === 'pro-5x').display_label, '')
+  const admin = await s.login()
+  const plus = (await (await s.request('/api/admin/plans', undefined, admin)).json()).plans.find((plan: { id: string }) => plan.id === 'plus')
+  const change = (displayLabel: unknown, version = plus.version) => ({ priceCents: plus.price_cents, enabled: Boolean(plus.enabled), displayLabel, version, note: '调整套餐标签' })
+  assert.equal((await s.request('/api/admin/plans/plus', change('热门推荐'))).status, 401)
+  assert.equal((await s.request('/api/admin/plans/plus', change(42), admin)).status, 400)
+  assert.equal((await s.request('/api/admin/plans/plus', change('太'.repeat(21)), admin)).status, 400)
+  assert.equal((await s.request('/api/admin/plans/plus', change('热门推荐'), admin)).status, 200)
+  assert.equal(s.db.prepare("SELECT display_label FROM catalog_plans WHERE id='plus'").get()!.display_label, '热门推荐')
+  assert.equal((await s.request('/api/admin/plans/plus', change('旧标签'), admin)).status, 409)
+  const direct = (await (await s.request('/api/catalog')).json()).plans.find((plan: { id: string }) => plan.id === 'plus')
+  assert.equal(direct.display_label, '热门推荐')
+  const now = Date.now()
+  s.db.prepare('INSERT INTO partners(id,slug,name,email,created_at,updated_at) VALUES (?,?,?,?,?,?)').run('label-agent', 'label-agent', '标签代理', 'label-agent@example.test', now, now)
+  s.db.prepare('INSERT INTO partner_prices(partner_id,plan,cost_cents,price_cents) SELECT ?,id,price_cents,price_cents FROM catalog_plans').run('label-agent')
+  const partnerResponse = await s.request('/api/catalog?partner=label-agent')
+  assert.equal(partnerResponse.status, 200, await partnerResponse.clone().text())
+  const partner = (await partnerResponse.json()).plans.find((plan: { id: string }) => plan.id === 'plus')
+  assert.equal(partner.display_label, '热门推荐')
+  assert.equal((await s.request('/api/admin/plans/plus', change('', plus.version + 1), admin)).status, 200)
+  assert.equal((await (await s.request('/api/catalog')).json()).plans.find((plan: { id: string }) => plan.id === 'plus').display_label, '')
+})
+
 test('5SIM admin connection check is authenticated, read-only, and does not expose credentials', async t => {
   const s = await setup(); t.after(() => s.db.close())
   assert.equal((await s.request('/api/admin/fivesim/status')).status, 401)

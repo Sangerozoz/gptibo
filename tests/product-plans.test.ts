@@ -29,7 +29,8 @@ test('inline price accepts only positive yuan amounts with at most two decimal p
 })
 
 test('inline saves describe price and sale status changes for the audit record', () => {
-  const original = { price_cents: 13900, enabled: 1 }
-  assert.equal(planUpdateNote(original, { priceCents: 14000, enabled: false }), '调整售价，套餐下架')
-  assert.equal(planUpdateNote({ price_cents: 13900, enabled: 0 }, { priceCents: 13900, enabled: true }), '套餐上架')
+  const original = { price_cents: 13900, enabled: 1, display_label: '日常之选' }
+  assert.equal(planUpdateNote(original, { priceCents: 14000, enabled: false, displayLabel: '热门推荐' }), '调整售价，套餐下架，修改标签')
+  assert.equal(planUpdateNote({ ...original, enabled: 0 }, { priceCents: 13900, enabled: true, displayLabel: '日常之选' }), '套餐上架')
+  assert.equal(planUpdateNote(original, { priceCents: 13900, enabled: true, displayLabel: '' }), '清除标签')
 })

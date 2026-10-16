@@ -45,9 +45,12 @@
 .direct-product-plan-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .direct-product-plan-heading h3 { margin:0; font-size:14px; font-weight:600; }
 .direct-product-plans>.admin-subtle { margin:0; }
-.direct-product-plans table { min-width:540px; }
-.direct-plan-price label { display:flex; align-items:center; gap:5px; min-width:100px; }
-.direct-plan-price input { width:90px; }
+.direct-product-plans table { min-width:600px; }
+.direct-product-plans table th,.direct-product-plans table td { padding-inline:12px; }
+.direct-plan-label input { width:110px; }
+.direct-plan-price label { display:flex; align-items:center; flex-wrap:nowrap; gap:5px; white-space:nowrap; }
+.direct-plan-price input { width:78px; flex:none; }
+.direct-plan-price small { display:inline; margin:0; white-space:nowrap; }
 .direct-plan-availability { display:flex; align-items:center; gap:7px; white-space:nowrap; }
 .direct-plan-availability input { width:16px; height:16px; accent-color:var(--primary); }
 .direct-plan-actions { display:flex; align-items:center; gap:6px; }
