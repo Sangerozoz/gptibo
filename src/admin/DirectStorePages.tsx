@@ -108,14 +108,6 @@ function move(ids: readonly string[], index: number, delta: number) {
   return next
 }
 
-function reposition(ids: readonly string[], from: string, to: string) {
-  const next = [...ids], oldIndex = next.indexOf(from), newIndex = next.indexOf(to)
-  if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return next
-  next.splice(oldIndex, 1)
-  next.splice(newIndex, 0, from)
-  return next
-}
-
 type CategoryDraft = Pick<Category, 'nameZh' | 'nameEn' | 'active'>
 
 function SortableCategoryRow({ id, index, total, draft, busy, onEdit, onMove }: { id: string; index: number; total: number; draft: CategoryDraft; busy: boolean; onEdit: (id: string, change: Partial<CategoryDraft>) => void; onMove: (index: number, delta: number) => void }) {
@@ -218,38 +210,51 @@ function ProductEditor({ product, categories, onUpdated, onClose }: { product: P
   </Dialog>
 }
 
+function SortableProductRow({ item, categoryName, expanded, editing, busy, revision, partnerModeEnabled, categories, onExpand, onEdit, onUpdated, onCloseEditor }: { item: Product; categoryName: string; expanded: boolean; editing: boolean; busy: boolean; revision: number; partnerModeEnabled: boolean; categories: Category[]; onExpand: () => void; onEdit: () => void; onUpdated: () => void; onCloseEditor: () => void }) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: item.id, disabled: busy })
+  return <div ref={setNodeRef} className="direct-admin-row direct-product-row" data-dragging={isDragging || undefined} style={{ transform: CSS.Translate.toString(transform), transition }}>
+    <div className="direct-row-heading">
+      <button type="button" ref={setActivatorNodeRef} className="direct-drag-handle" title={`拖动排序 ${item.nameZh}`} aria-label={`拖动排序 ${item.nameZh}`} disabled={busy} {...attributes} {...listeners}><GripVertical size={16} /></button>
+      <Package size={17} /><strong>{item.nameZh}</strong>
+      <span>{item.listed ? '已上架' : '已下架'} · {categoryName}</span>
+      <div className="direct-move">
+        <Button variant="outline" size="icon" aria-label={`${expanded ? '收起' : '展开'} ${item.nameZh} 套餐与售价`} aria-expanded={expanded} onClick={onExpand}>{expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</Button>
+        <Button variant="outline" onClick={onEdit}>编辑</Button>
+      </div>
+    </div>
+    {expanded && <div className="direct-product-details"><ProductPlans productId={item.id} productName={item.nameZh} listed={item.listed} revision={revision} onUpdated={onUpdated} partnerModeEnabled={partnerModeEnabled} /></div>}
+    {editing && <ProductEditor key={item.version} product={item} categories={categories} onUpdated={onUpdated} onClose={onCloseEditor} />}
+  </div>
+}
+
 function ProductList({ initial, categories, revision, onUpdated, partnerModeEnabled }: { initial: { products: Product[]; orderVersion: number }; categories: Category[]; revision: number; onUpdated: () => void; partnerModeEnabled: boolean }) {
   const [ids, setIds] = useState(initial.products.map(item => item.id))
   const [expanded, setExpanded] = useState<string | null>(null)
   const [editing, setEditing] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }))
   const dirty = ids.some((id, index) => initial.products[index]?.id !== id)
+  function finishDrag({ active, over }: DragEndEvent) {
+    if (!over || active.id === over.id) return
+    const from = ids.indexOf(String(active.id)), to = ids.indexOf(String(over.id))
+    if (from >= 0 && to >= 0) setIds(arrayMove(ids, from, to))
+  }
   async function saveOrder() {
     setBusy(true); setError('')
     try { await api('/api/admin/direct-store/products/order', { ids, version: initial.orderVersion }); onUpdated() }
     catch (cause) { setError(errorMessage(cause)) } finally { setBusy(false) }
   }
   return <>
-    <p className="admin-panel-footnote">下架后，前台商品卡片和详情页将隐藏，新的直接购买会被拒绝；已有订单仍可处理。拖动排序柄或使用上下按钮调整位置后请保存排序。新增商品需先接入套餐、下单与交付流程。</p>
-    <div className="direct-admin-list">{ids.map((id, index) => {
-      const item = initial.products.find(product => product.id === id)!
-      return <div className="direct-admin-row" key={id} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); setIds(reposition(ids, event.dataTransfer.getData('text/plain'), id)) }}>
-        <div className="direct-row-heading">
-          <span className="direct-drag-handle" draggable={!busy} title={`拖动排序 ${item.nameZh}`} onDragStart={event => event.dataTransfer.setData('text/plain', id)}><GripVertical size={16} /></span>
-          <Package size={17} /><strong>{item.nameZh}</strong>
-          <span>{item.listed ? '已上架' : '已下架'} · {categories.find(category => category.id === item.categoryId)?.nameZh ?? item.categoryId}</span>
-          <div className="direct-move">
-            <Button variant="outline" size="icon" aria-label={`上移 ${item.nameZh}`} disabled={busy || index === 0} onClick={() => setIds(move(ids, index, -1))}><ArrowUp size={14} /></Button>
-            <Button variant="outline" size="icon" aria-label={`下移 ${item.nameZh}`} disabled={busy || index === ids.length - 1} onClick={() => setIds(move(ids, index, 1))}><ArrowDown size={14} /></Button>
-            <Button variant="outline" size="icon" aria-label={`${expanded === id ? '收起' : '展开'} ${item.nameZh} 套餐与售价`} aria-expanded={expanded === id} onClick={() => setExpanded(expanded === id ? null : id)}>{expanded === id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</Button>
-            <Button variant="outline" onClick={() => setEditing(id)}>编辑</Button>
-          </div>
-        </div>
-        {expanded === id && <div className="direct-product-details"><ProductPlans productId={item.id} productName={item.nameZh} listed={item.listed} revision={revision} onUpdated={onUpdated} partnerModeEnabled={partnerModeEnabled} /></div>}
-        {editing === id && <ProductEditor key={item.version} product={item} categories={categories} onUpdated={onUpdated} onClose={() => setEditing(null)} />}
-      </div>
-    })}</div>
+    <p className="admin-panel-footnote">下架后，前台商品卡片和详情页将隐藏，新的直接购买会被拒绝；已有订单仍可处理。拖动商品左侧的排序柄调整位置后请保存排序。新增商品需先接入套餐、下单与交付流程。</p>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis]} onDragEnd={finishDrag}>
+      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+        <div className="direct-admin-list">{ids.map(id => {
+          const item = initial.products.find(product => product.id === id)!
+          return <SortableProductRow key={id} item={item} categoryName={categories.find(category => category.id === item.categoryId)?.nameZh ?? item.categoryId} expanded={expanded === id} editing={editing === id} busy={busy} revision={revision} partnerModeEnabled={partnerModeEnabled} categories={categories} onExpand={() => setExpanded(expanded === id ? null : id)} onEdit={() => setEditing(id)} onUpdated={onUpdated} onCloseEditor={() => setEditing(null)} />
+        })}</div>
+      </SortableContext>
+    </DndContext>
     <div className="direct-list-actions"><Button onClick={() => void saveOrder()} disabled={busy || !dirty}>保存商品排序</Button>{error && <p className="admin-error" role="alert">{error}</p>}</div>
   </>
 }

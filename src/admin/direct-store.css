@@ -18,6 +18,9 @@
 .direct-category-heading .direct-move { flex:none; }
 .direct-category-row { background:var(--card); }
 .direct-category-row[data-dragging] { position:relative; z-index:2; box-shadow:0 14px 32px #0003; }
+.direct-product-row { background:var(--card); }
+.direct-product-row[data-dragging] { position:relative; z-index:2; box-shadow:0 14px 32px #0003; }
+.direct-product-row .direct-drag-handle { width:28px; height:32px; }
 .direct-row-heading>span { color:var(--muted-foreground); font-size:11px; }
 .direct-drag-handle { display:inline-flex; flex:none; align-items:center; justify-content:center; width:16px; height:24px; padding:0; border:0; background:none; color:var(--muted-foreground); cursor:grab; user-select:none; touch-action:none; }
 .direct-drag-handle:active { cursor:grabbing; }
