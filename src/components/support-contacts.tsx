@@ -85,7 +85,7 @@ export function SupportContactsDialog({ open, onOpenChange, contacts, name, erro
         <dt>{t(item.label)}</dt>
         {item.value && <dd>{item.key === 'email' ? <a href={'mailto:' + encodeURIComponent(item.value)}>{item.value}</a> : item.value}</dd>}
         {item.value && <CopyButton className="support-contact-copy" variant="ghost" size="icon" iconOnly label={t('复制{channel}', { channel: t(item.label) })} title={t('复制{channel}', { channel: t(item.label) })} value={item.value} />}
-        {item.qrUrl && <a className="support-contact-qr" href={item.qrUrl} target="_blank" rel="noopener noreferrer" aria-label={t('打开{channel}二维码', { channel: t(item.label) })}><img src={item.qrUrl} alt={t('{channel}二维码', { channel: t(item.label) })} width="168" height="168" /></a>}
+        {item.qrUrl && <div className="support-contact-qr"><img src={item.qrUrl} alt={t('{channel}二维码', { channel: t(item.label) })} width="168" height="168" /></div>}
       </div>)}</dl> : <div className="support-contact-empty"><p>{t('商店暂未提供联系方式')}</p><span>{t('已有订单可在“我的订单”查看进度或申请售后。')}</span></div>}
     </div>
     <DialogFooter className="support-contact-footer"><Button className="support-help-button" variant="ghost" onClick={() => { onOpenChange(false); onHelp() }}><span>{t('查看常见问题')}</span><ArrowRight data-icon="inline-end" /></Button></DialogFooter>

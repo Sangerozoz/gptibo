@@ -100,7 +100,6 @@ export const englishMessages: Readonly<Record<string, string>> = {
   '重新读取': 'Reload',
   '复制{channel}': 'Copy {channel}',
   '{channel}二维码': '{channel} QR code',
-  '打开{channel}二维码': 'Open {channel} QR code',
   '已复制': 'Copied',
   '复制失败，请手动选取': 'Could not copy. Please select the text manually.',
   '商店暂未提供联系方式': 'No contact details are available yet',

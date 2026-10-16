@@ -172,7 +172,7 @@ export function OrderSupportButton({
                         title={'复制' + channel.label}
                         value={channel.value}
                       />}
-                      {channel.qrUrl && <a className="order-support-channel-qr" href={channel.qrUrl} target="_blank" rel="noopener noreferrer" aria-label={'打开' + channel.label + '二维码'}><img src={channel.qrUrl} alt={channel.label + '二维码'} width="152" height="152" /></a>}
+                      {channel.qrUrl && <div className="order-support-channel-qr"><img src={channel.qrUrl} alt={channel.label + '二维码'} width="152" height="152" /></div>}
                     </div>
                   )
                 })}

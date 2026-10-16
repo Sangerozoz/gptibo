@@ -22,7 +22,7 @@ export function RechargeSuccessContacts({ contacts, name }: { contacts?: Support
             <dt><Icon size={14} aria-hidden="true" />{channel.label}</dt>
             {channel.value && <dd>{channel.key === 'email' ? <a href={'mailto:' + encodeURIComponent(channel.value)}>{channel.value}</a> : channel.value}</dd>}
             {channel.value && <CopyButton iconOnly variant="ghost" size="icon" value={channel.value} label={'复制' + channel.label} title={'复制' + channel.label} />}
-            {channel.qrUrl && <a className="success-contact-qr" href={channel.qrUrl} target="_blank" rel="noopener noreferrer" aria-label={'打开' + channel.label + '二维码'}><img src={channel.qrUrl} alt={channel.label + '二维码'} width="136" height="136" /></a>}
+            {channel.qrUrl && <div className="success-contact-qr"><img src={channel.qrUrl} alt={channel.label + '二维码'} width="136" height="136" /></div>}
           </div>
         })}
       </dl>
