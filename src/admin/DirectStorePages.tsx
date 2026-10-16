@@ -3,7 +3,7 @@ import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { CSS } from '@dnd-kit/utilities'
-import { ArrowDown, ArrowUp, GripVertical, ImagePlus, Package, Save } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, GripVertical, ImagePlus, Package, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -181,7 +181,7 @@ export function CategoryAdminPage({ revision, onUpdated }: { revision: number; o
   return <section className="admin-panel"><div className="admin-panel-title"><h2>商品分类</h2><Button type="button" onClick={() => setCreateOpen(true)}>新增分类</Button></div><Feedback error={error} loading={loading} data={data} />{data?.categories && <CategoryList key={`${data.orderVersion}:${data.categories.map(item => item.version).join(':')}`} initial={{ categories: data.categories, orderVersion: data.orderVersion }} onUpdated={onUpdated} />}{createOpen && <CategoryCreate onClose={() => setCreateOpen(false)} onUpdated={onUpdated} />}</section>
 }
 
-function ProductEditor({ product, categories, onUpdated }: { product: Product; categories: Category[]; onUpdated: () => void }) {
+function ProductEditor({ product, categories, onUpdated, onClose }: { product: Product; categories: Category[]; onUpdated: () => void; onClose: () => void }) {
   const [nameZh, setNameZh] = useState(product.nameZh)
   const [nameEn, setNameEn] = useState(product.nameEn)
   const [descriptionZh, setDescriptionZh] = useState(product.descriptionZh)
@@ -194,7 +194,7 @@ function ProductEditor({ product, categories, onUpdated }: { product: Product; c
   const [error, setError] = useState('')
   async function save(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError('')
-    try { await api(`/api/admin/direct-store/products/${product.id}`, { nameZh, nameEn, descriptionZh, descriptionEn, categoryId, listed, imageMediaId, version: product.version }); onUpdated() }
+    try { await api(`/api/admin/direct-store/products/${product.id}`, { nameZh, nameEn, descriptionZh, descriptionEn, categoryId, listed, imageMediaId, version: product.version }); onUpdated(); onClose() }
     catch (cause) { setError(errorMessage(cause)) } finally { setBusy(false) }
   }
   async function addImage(file: File) {
@@ -202,20 +202,26 @@ function ProductEditor({ product, categories, onUpdated }: { product: Product; c
     try { const result = await upload(file); setImageMediaId(result.id); setImageUrl(result.url) }
     finally { setBusy(false) }
   }
-  return <form className="direct-admin-form direct-product-editor" onSubmit={event => void save(event)}>
-    <div className="direct-admin-fields"><label>中文名称<Input value={nameZh} onChange={event => setNameZh(event.target.value)} maxLength={64} required disabled={busy} /></label><label>英文名称<Input value={nameEn} onChange={event => setNameEn(event.target.value)} maxLength={64} disabled={busy} /></label></div>
-    <div className="direct-admin-fields"><label>中文简介<Input value={descriptionZh} onChange={event => setDescriptionZh(event.target.value)} maxLength={200} disabled={busy} /></label><label>英文简介<Input value={descriptionEn} onChange={event => setDescriptionEn(event.target.value)} maxLength={200} disabled={busy} /></label></div>
-    <div className="direct-admin-fields"><label>所属分类<select value={categoryId} onChange={event => setCategoryId(event.target.value)} disabled={busy}>{categories.map(category => <option key={category.id} value={category.id}>{category.nameZh}{category.active ? '' : '（停用）'}</option>)}</select></label><label className="direct-checkbox"><input type="checkbox" checked={listed} onChange={event => setListed(event.target.checked)} disabled={busy} />前台上架</label></div>
-    <label className="direct-field-title">商品图片</label><ImageInput url={imageUrl} onUpload={addImage} onRemove={() => { setImageMediaId(null); setImageUrl(null) }} busy={busy} />
-    <p className="admin-subtle">不上传图片时继续显示原有商品插画。</p>
-    <Feedback error={error} /><div className="direct-product-actions"><Button type="submit" disabled={busy || !nameZh.trim()}><Save size={14} />{busy ? '保存中…' : '保存商品'}</Button></div>
-  </form>
+  return <Dialog open onOpenChange={open => { if (!open && !busy) onClose() }}>
+    <DialogContent className="direct-product-dialog" showCloseButton={!busy}>
+      <DialogHeader><DialogTitle>编辑商品信息 · {product.nameZh}</DialogTitle><DialogDescription>修改名称、简介、分类、图片和前台上架状态。</DialogDescription></DialogHeader>
+      <form className="direct-admin-form direct-product-editor" onSubmit={event => void save(event)}>
+        <div className="direct-admin-fields"><label>中文名称<Input value={nameZh} onChange={event => setNameZh(event.target.value)} maxLength={64} required disabled={busy} /></label><label>英文名称<Input value={nameEn} onChange={event => setNameEn(event.target.value)} maxLength={64} disabled={busy} /></label></div>
+        <div className="direct-admin-fields"><label>中文简介<Input value={descriptionZh} onChange={event => setDescriptionZh(event.target.value)} maxLength={200} disabled={busy} /></label><label>英文简介<Input value={descriptionEn} onChange={event => setDescriptionEn(event.target.value)} maxLength={200} disabled={busy} /></label></div>
+        <div className="direct-admin-fields"><label>所属分类<select value={categoryId} onChange={event => setCategoryId(event.target.value)} disabled={busy}>{categories.map(category => <option key={category.id} value={category.id}>{category.nameZh}{category.active ? '' : '（停用）'}</option>)}</select></label><label className="direct-checkbox"><input type="checkbox" checked={listed} onChange={event => setListed(event.target.checked)} disabled={busy} />前台上架</label></div>
+        <label className="direct-field-title">商品图片</label><ImageInput url={imageUrl} onUpload={addImage} onRemove={() => { setImageMediaId(null); setImageUrl(null) }} busy={busy} />
+        <p className="admin-subtle">不上传图片时继续显示原有商品插画。</p>
+        <Feedback error={error} />
+        <DialogFooter><Button type="button" variant="outline" onClick={onClose} disabled={busy}>取消</Button><Button type="submit" disabled={busy || !nameZh.trim()}>{busy ? '保存中…' : '保存商品'}</Button></DialogFooter>
+      </form>
+    </DialogContent>
+  </Dialog>
 }
 
 function ProductList({ initial, categories, revision, onUpdated, partnerModeEnabled }: { initial: { products: Product[]; orderVersion: number }; categories: Category[]; revision: number; onUpdated: () => void; partnerModeEnabled: boolean }) {
   const [ids, setIds] = useState(initial.products.map(item => item.id))
+  const [expanded, setExpanded] = useState<string | null>(null)
   const [editing, setEditing] = useState<string | null>(null)
-  const [tab, setTab] = useState<'info' | 'plans'>('info')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const dirty = ids.some((id, index) => initial.products[index]?.id !== id)
@@ -236,16 +242,12 @@ function ProductList({ initial, categories, revision, onUpdated, partnerModeEnab
           <div className="direct-move">
             <Button variant="outline" size="icon" aria-label={`上移 ${item.nameZh}`} disabled={busy || index === 0} onClick={() => setIds(move(ids, index, -1))}><ArrowUp size={14} /></Button>
             <Button variant="outline" size="icon" aria-label={`下移 ${item.nameZh}`} disabled={busy || index === ids.length - 1} onClick={() => setIds(move(ids, index, 1))}><ArrowDown size={14} /></Button>
-            <Button variant="outline" onClick={() => { setEditing(editing === id ? null : id); setTab('info') }}>{editing === id ? '收起' : '编辑'}</Button>
+            <Button variant="outline" size="icon" aria-label={`${expanded === id ? '收起' : '展开'} ${item.nameZh} 套餐与售价`} aria-expanded={expanded === id} onClick={() => setExpanded(expanded === id ? null : id)}>{expanded === id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</Button>
+            <Button variant="outline" onClick={() => setEditing(id)}>编辑</Button>
           </div>
         </div>
-        {editing === id && <div className="direct-product-details">
-          <div className="direct-product-tabs" role="group" aria-label={`${item.nameZh}管理内容`}>
-            <Button type="button" variant="ghost" aria-pressed={tab === 'info'} onClick={() => setTab('info')}>商品信息</Button>
-            <Button type="button" variant="ghost" aria-pressed={tab === 'plans'} onClick={() => setTab('plans')}>套餐与售价</Button>
-          </div>
-          {tab === 'info' ? <ProductEditor key={item.version} product={item} categories={categories} onUpdated={onUpdated} /> : <ProductPlans productId={item.id} listed={item.listed} revision={revision} onUpdated={onUpdated} partnerModeEnabled={partnerModeEnabled} />}
-        </div>}
+        {expanded === id && <div className="direct-product-details"><ProductPlans productId={item.id} productName={item.nameZh} listed={item.listed} revision={revision} onUpdated={onUpdated} partnerModeEnabled={partnerModeEnabled} /></div>}
+        {editing === id && <ProductEditor key={item.version} product={item} categories={categories} onUpdated={onUpdated} onClose={() => setEditing(null)} />}
       </div>
     })}</div>
     <div className="direct-list-actions"><Button onClick={() => void saveOrder()} disabled={busy || !dirty}>保存商品排序</Button>{error && <p className="admin-error" role="alert">{error}</p>}</div>

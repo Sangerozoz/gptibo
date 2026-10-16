@@ -39,13 +39,20 @@
 .direct-category-position strong { font-weight:500; color:var(--muted-foreground); }
 .direct-category-create-form [data-slot="dialog-footer"] { margin-top:4px; }
 .direct-product-details { margin-top:16px; border:1px solid var(--border); border-radius:12px; overflow:hidden; }
-.direct-product-tabs { display:flex; gap:4px; padding:8px; border-bottom:1px solid var(--border); }
-.direct-product-tabs [data-slot=button] { min-height:34px; }
-.direct-product-tabs [aria-pressed=true] { background:var(--secondary); color:var(--foreground); }
-.direct-product-editor { padding:18px; }
-.direct-product-actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.direct-product-dialog { width:min(100% - 2rem,720px); max-width:720px; max-height:90dvh; overflow-y:auto; }
+.direct-product-dialog .direct-product-editor { padding:0; }
 .direct-product-plans { display:grid; gap:16px; padding:18px; }
+.direct-product-plan-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.direct-product-plan-heading h3 { margin:0; font-size:14px; font-weight:600; }
 .direct-product-plans>.admin-subtle { margin:0; }
+.direct-product-plans table { min-width:540px; }
+.direct-plan-price label { display:flex; align-items:center; gap:5px; min-width:100px; }
+.direct-plan-price input { width:90px; }
+.direct-plan-availability { display:flex; align-items:center; gap:7px; white-space:nowrap; }
+.direct-plan-availability input { width:16px; height:16px; accent-color:var(--primary); }
+.direct-plan-actions { display:flex; align-items:center; gap:6px; }
+.direct-plan-actions [aria-label] { width:32px; height:32px; }
+.direct-plan-actions + .admin-error { min-width:150px; margin:8px 0 0; }
 .direct-product-plan-audit { padding-top:16px; border-top:1px solid var(--border); }
 .direct-product-plan-audit h3 { margin:0 0 12px; font-size:14px; }
 .direct-product-plan-audit .admin-audit-list { padding:0; }
