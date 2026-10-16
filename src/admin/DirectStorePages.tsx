@@ -1,4 +1,8 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import { CSS } from '@dnd-kit/utilities'
 import { ArrowDown, ArrowUp, GripVertical, ImagePlus, Package, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -111,12 +115,27 @@ function reposition(ids: readonly string[], from: string, to: string) {
   return next
 }
 
+type CategoryDraft = Pick<Category, 'nameZh' | 'nameEn' | 'active'>
+
+function SortableCategoryRow({ id, index, total, draft, busy, onEdit, onMove }: { id: string; index: number; total: number; draft: CategoryDraft; busy: boolean; onEdit: (id: string, change: Partial<CategoryDraft>) => void; onMove: (index: number, delta: number) => void }) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id, disabled: busy })
+  return <div ref={setNodeRef} className="direct-admin-row direct-category-row" data-dragging={isDragging || undefined} style={{ transform: CSS.Translate.toString(transform), transition }}>
+    <div className="direct-row-heading direct-category-heading">
+      <button type="button" ref={setActivatorNodeRef} className="direct-drag-handle" title={`拖动排序 ${draft.nameZh}`} aria-label={`拖动排序 ${draft.nameZh}`} disabled={busy} {...attributes} {...listeners}><GripVertical size={16} /></button>
+      <strong>{draft.nameZh || '未命名分类'}</strong>
+      <div className="direct-move"><Button type="button" variant="outline" size="icon" aria-label={`上移 ${draft.nameZh}`} disabled={busy || index === 0} onClick={() => onMove(index, -1)}><ArrowUp size={14} /></Button><Button type="button" variant="outline" size="icon" aria-label={`下移 ${draft.nameZh}`} disabled={busy || index === total - 1} onClick={() => onMove(index, 1)}><ArrowDown size={14} /></Button></div>
+    </div>
+    <div className="direct-row-editor"><label>中文名称<Input value={draft.nameZh} onChange={event => onEdit(id, { nameZh: event.target.value })} maxLength={32} required disabled={busy} /></label><label>英文名称<Input value={draft.nameEn} onChange={event => onEdit(id, { nameEn: event.target.value })} maxLength={32} disabled={busy} /></label><label className="direct-checkbox"><input type="checkbox" checked={draft.active} onChange={event => onEdit(id, { active: event.target.checked })} disabled={busy} />显示分类</label></div>
+  </div>
+}
+
 function CategoryList({ initial, onUpdated }: { initial: { categories: Category[]; orderVersion: number }; onUpdated: () => void }) {
   const [orderedIds, setOrderedIds] = useState(initial.categories.map(item => item.id))
   const ids = [...orderedIds, ...initial.categories.map(item => item.id).filter(id => !orderedIds.includes(id))]
   const [drafts, setDrafts] = useState<Record<string, Partial<Pick<Category, 'nameZh' | 'nameEn' | 'active'>>>>({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }))
   const draftFor = (id: string) => {
     const original = initial.categories.find(item => item.id === id)!
     return { nameZh: original.nameZh, nameEn: original.nameEn, active: original.active, ...drafts[id] }
@@ -128,8 +147,13 @@ function CategoryList({ initial, onUpdated }: { initial: { categories: Category[
     return category?.id !== id || draft.nameZh !== original.nameZh || draft.nameEn !== original.nameEn || draft.active !== original.active
   })
   const valid = ids.every(id => draftFor(id).nameZh.trim())
-  function edit(id: string, change: Partial<{ nameZh: string; nameEn: string; active: boolean }>) {
+  function edit(id: string, change: Partial<CategoryDraft>) {
     setDrafts(current => ({ ...current, [id]: { ...current[id], ...change } }))
+  }
+  function finishDrag({ active, over }: DragEndEvent) {
+    if (!over || active.id === over.id) return
+    const from = ids.indexOf(String(active.id)), to = ids.indexOf(String(over.id))
+    if (from >= 0 && to >= 0) setOrderedIds(arrayMove(ids, from, to))
   }
   async function save() {
     setBusy(true); setError('')
@@ -141,13 +165,11 @@ function CategoryList({ initial, onUpdated }: { initial: { categories: Category[
   }
   return <>
     <p className="admin-panel-footnote">关闭“显示分类”后，前台分类筛选会隐藏；其中已上架商品仍显示在“全部商品”。可拖动排序柄或使用上下按钮调整位置，修改完成后统一保存。</p>
-    <div className="direct-admin-list">{ids.map((id, index) => {
-      const draft = draftFor(id)
-      return <div className="direct-admin-row" key={id} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); setOrderedIds(reposition(ids, event.dataTransfer.getData('text/plain'), id)) }}>
-        <div className="direct-row-heading direct-category-heading"><span className="direct-drag-handle" draggable={!busy} title={`拖动排序 ${draft.nameZh}`} onDragStart={event => event.dataTransfer.setData('text/plain', id)}><GripVertical size={16} /></span><strong>{draft.nameZh || '未命名分类'}</strong><div className="direct-move"><Button variant="outline" size="icon" aria-label={`上移 ${draft.nameZh}`} disabled={busy || index === 0} onClick={() => setOrderedIds(move(ids, index, -1))}><ArrowUp size={14} /></Button><Button variant="outline" size="icon" aria-label={`下移 ${draft.nameZh}`} disabled={busy || index === ids.length - 1} onClick={() => setOrderedIds(move(ids, index, 1))}><ArrowDown size={14} /></Button></div></div>
-        <div className="direct-row-editor"><label>中文名称<Input value={draft.nameZh} onChange={event => edit(id, { nameZh: event.target.value })} maxLength={32} required disabled={busy} /></label><label>英文名称<Input value={draft.nameEn} onChange={event => edit(id, { nameEn: event.target.value })} maxLength={32} disabled={busy} /></label><label className="direct-checkbox"><input type="checkbox" checked={draft.active} onChange={event => edit(id, { active: event.target.checked })} disabled={busy} />显示分类</label></div>
-      </div>
-    })}</div>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis]} onDragEnd={finishDrag}>
+      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+        <div className="direct-admin-list">{ids.map((id, index) => <SortableCategoryRow key={id} id={id} index={index} total={ids.length} draft={draftFor(id)} busy={busy} onEdit={edit} onMove={(position, delta) => setOrderedIds(move(ids, position, delta))} />)}</div>
+      </SortableContext>
+    </DndContext>
     <div className="direct-list-actions"><Button type="button" onClick={() => void save()} disabled={busy || !dirty || !valid}><Save size={14} />{busy ? '保存中…' : '保存分类'}</Button>{error && <p className="admin-error" role="alert">{error}</p>}</div>
   </>
 }
