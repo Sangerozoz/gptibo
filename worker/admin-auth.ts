@@ -13,10 +13,20 @@ export function configured(env: Env) {
   try { return Boolean(adminLoginEmail(env) && env.ADMIN_USERNAME && validTotpSecret(env.ADMIN_TOTP_SECRET)) } catch { return false }
 }
 const mailReady = (env: Env) => Boolean(env.RESEND_API_KEY && env.RESEND_FROM)
+function localDevAdmin(request: Request, env: Env) {
+  if (env.ADMIN_DEV_BYPASS !== 'true' || env.ORDER_TESTING_ENABLED !== 'true') return false
+  try {
+    const requestUrl = new URL(request.url)
+    const siteUrl = new URL(env.PUBLIC_SITE_ORIGIN ?? '')
+    const loopback = (url: URL) => url.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(url.hostname)
+    return loopback(requestUrl) && loopback(siteUrl) && siteUrl.pathname === '/' && !siteUrl.search && !siteUrl.hash
+  } catch { return false }
+}
 const credentialVersion = (env: Env) => hash('admin-email-totp-v1:' + adminLoginEmail(env) + ':' + env.ADMIN_USERNAME + ':' + env.ADMIN_TOTP_SECRET)
 const codeHash = (env: Env, version: string, id: string, code: string) => hash('admin-email:' + env.ADMIN_TOTP_SECRET + ':' + version + ':' + id + ':' + code)
 const invalidLogin = () => new ApiError('用户名、邮箱验证码或 2FA 验证码不正确，或验证码已失效。', 401)
 export async function requireAdmin(request: Request, env: Env) {
+  if (localDevAdmin(request, env)) return
   if (!configured(env)) throw new ApiError('管理员验证器尚未配置，请先完成服务器初始化。', 503)
   const token = readCookie(request, 'admin')
   if (!token) throw new ApiError('请先登录管理后台。', 401)
@@ -29,6 +39,7 @@ async function reserveAttempt(env: Env, key: string, now: number, maximum: numbe
 }
 export async function authRoute(request: Request, env: Env, path: string) {
   if (path === '/api/admin/session' && request.method === 'GET') {
+    if (localDevAdmin(request, env)) return json({ configured: true, authenticated: true, devMode: true, mailReady: mailReady(env), username: env.ADMIN_USERNAME || 'local-admin', partnerModeEnabled: env.PARTNER_MODE_ENABLED !== 'false' })
     if (!configured(env)) return json({ configured: false, authenticated: false, mailReady: mailReady(env), partnerModeEnabled: env.PARTNER_MODE_ENABLED !== 'false' })
     try { await requireAdmin(request, env); return json({ configured: true, authenticated: true, mailReady: mailReady(env), username: env.ADMIN_USERNAME, partnerModeEnabled: env.PARTNER_MODE_ENABLED !== 'false' }) }
     catch (e) { if (e instanceof ApiError && e.status === 401) return json({ configured: true, authenticated: false, mailReady: mailReady(env), partnerModeEnabled: env.PARTNER_MODE_ENABLED !== 'false' }); throw e }

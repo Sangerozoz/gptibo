@@ -24,6 +24,7 @@ export interface Env {
   ADMIN_EMAIL?: string
   ADMIN_USERNAME?: string
   ADMIN_TOTP_SECRET?: string
+  ADMIN_DEV_BYPASS?: string
   RESEND_API_KEY?: string
   RESEND_FROM?: string
   PUBLIC_SITE_ORIGIN?: string

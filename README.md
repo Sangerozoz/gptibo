@@ -58,6 +58,8 @@ npm run preview:worker
 
 若前端地址是 `http://127.0.0.1:5173/admin`，它的 `/api` 请求由 Vite 转发至本机 `127.0.0.1:8787` 的 Worker。配置 `.dev.vars` 后必须重启 Worker，再在登录页点击“已配置，重新检查”；仅启动或重启 Vite 不会加载新配置。没有 Resend 凭据时无法完成当前管理员登录。
 
+只在本机预览后台时，可以在 `.dev.vars` 设置 `ADMIN_DEV_BYPASS="true"`、`ORDER_TESTING_ENABLED="true"`，并把 `PUBLIC_SITE_ORIGIN` 设为 `http://127.0.0.1:5173`，然后重启 Worker。此时打开 `/admin` 会直接进入工作台，页面会标明本地开发模式；无需邮件或验证器。这个开关只接受本机 HTTP 地址，关闭开关并重启后恢复正常登录。不要在公开部署的环境中配置它。
+
 想同时使用 Vite 热更新时，在另一个终端运行 `npm run dev`；保持上面的 `npm run preview:worker` 继续运行。
 
 ### 直营商店管理（Worker / D1）

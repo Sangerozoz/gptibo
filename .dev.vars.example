@@ -2,6 +2,8 @@
 ADMIN_USERNAME= # Configure locally; never commit a real value.
 ADMIN_EMAIL= # Configure locally; never commit a real value.
 ADMIN_TOTP_SECRET= # Configure locally; never commit a real value.
+# Local preview only: requires loopback URLs and ORDER_TESTING_ENABLED=true.
+ADMIN_DEV_BYPASS="false"
 
 # Partner email login (optional)
 RESEND_API_KEY= # Configure locally; never commit a real value.

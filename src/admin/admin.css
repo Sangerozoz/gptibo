@@ -19,6 +19,7 @@
 .admin-topbar>div,.admin-topbar a { display:flex; align-items:center; gap:15px; }
 .admin-topbar a { gap:5px; text-decoration:none; color:var(--foreground); }
 .admin-main { max-width:1400px; padding:38px 36px 20px; margin:auto; }
+.admin-dev-notice { margin-bottom:22px; padding:11px 14px; border:1px solid var(--border); border-radius:8px; background:var(--secondary); color:var(--foreground); font-size:12px; }
 .admin-page-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; }
 .admin-page-heading span { font-size:9px; letter-spacing:2px; color:var(--muted-foreground); }
 .admin-page-heading h1 { font-size:29px; font-weight:550; letter-spacing:-1px; margin:6px 0 8px; outline:none; }

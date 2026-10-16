@@ -429,6 +429,28 @@ function adminMail(t: Parameters<Parameters<typeof test>[1]>[0], s: Awaited<Retu
   return { mails, send }
 }
 
+test('explicit local development mode opens admin only on loopback with testing enabled', async t => {
+  const s = await setup(); t.after(() => s.db.close())
+  const local = (path: string) => worker.fetch(new Request('http://127.0.0.1:8787' + path), s.env)
+  s.env.ADMIN_DEV_BYPASS = 'true'
+  s.env.PUBLIC_SITE_ORIGIN = 'http://127.0.0.1:5173'
+  delete s.env.ADMIN_TOTP_SECRET
+  assert.deepEqual(await (await local('/api/admin/session')).json(), {
+    configured: true, authenticated: true, devMode: true, mailReady: false,
+    username: 'tester', partnerModeEnabled: true,
+  })
+  assert.equal((await local('/api/admin/orders')).status, 200)
+  assert.equal((await s.request('/api/admin/orders')).status, 503)
+  s.env.ORDER_TESTING_ENABLED = 'false'
+  assert.equal((await local('/api/admin/orders')).status, 503)
+  s.env.ORDER_TESTING_ENABLED = 'true'
+  s.env.PUBLIC_SITE_ORIGIN = 'https://shop.example.invalid'
+  assert.equal((await local('/api/admin/orders')).status, 503)
+  s.env.PUBLIC_SITE_ORIGIN = 'http://127.0.0.1:5173'
+  s.env.ADMIN_DEV_BYPASS = 'false'
+  assert.equal((await local('/api/admin/orders')).status, 503)
+})
+
 test('admin login requires all three fields and sends codes only to the fixed mailbox', async t => {
   const s = await setup(); t.after(() => s.db.close()); const mail = adminMail(t, s)
   const session = await (await s.request('/api/admin/session')).json()
