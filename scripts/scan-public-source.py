@@ -17,6 +17,7 @@ PUBLIC_HOSTS = {
     'api.resend.com', 'api.telegram.org', 'open.feishu.cn', 't.me',
     'openapi.alipay.com', 'openapi-sandbox.dl.alipaydev.com', 'qr.alipay.com',
     'chatgpt.com', 'api.openai.com', 'cdn.auth0.com', '5sim.net',
+    'z-pay.cn',  # User-provided payment provider reference link; no API endpoint is configured.
     'github.com', 'raw.githubusercontent.com', 'registry.npmjs.org',
     'www.w3.org', 'www.apache.org', 'ui.shadcn.com', 'transitions.dev', 'vite.dev',
     'www.duolingo.com', 'www.duolingo.cn', 'd35aaqx5ub95lt.cloudfront.net',
