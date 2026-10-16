@@ -4,8 +4,7 @@
 .admin-brand>svg { width:26px; height:26px; }
 .admin-brand strong { font-size:19px; letter-spacing:-.5px; }
 .admin-brand>span { font-size:11px; color:var(--muted-foreground); margin-left:auto; }
-.admin-workspace-label { margin:34px 10px 12px; color:var(--muted-foreground); font-size:10px; letter-spacing:1px; }
-.admin-sidebar nav { display:grid; gap:18px; }
+.admin-sidebar nav { display:grid; gap:18px; margin-top:32px; }
 .admin-nav-group { min-width:0; }
 .admin-nav-group+.admin-nav-group { border-top:1px solid var(--border); padding-top:14px; }
 .admin-nav-group-label { display:block; margin:0 10px 7px; color:var(--muted-foreground); font-size:11px; font-weight:600; letter-spacing:.2px; }
@@ -159,7 +158,6 @@
   .admin-nav-group-items { display:flex; gap:4px; }
   .admin-nav-group-label { margin-bottom:6px; }
   .admin-sidebar nav button { flex-shrink:0; font-size:12px; padding-inline:10px; gap:6px; }
-  .admin-workspace-label { display:none; }
   .admin-sidebar-bottom { border:0; margin:12px 0 0; padding:0; display:flex; justify-content:space-between; align-items:center; }
   .admin-sidebar-bottom>span { font-size:11px; padding:0; }
   .admin-topbar { min-height:56px; padding-inline:16px; }
