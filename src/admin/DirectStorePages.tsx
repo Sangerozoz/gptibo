@@ -170,7 +170,7 @@ function CategoryList({ initial, onUpdated }: { initial: { categories: Category[
         <div className="direct-admin-list">{ids.map((id, index) => <SortableCategoryRow key={id} id={id} index={index} total={ids.length} draft={draftFor(id)} busy={busy} onEdit={edit} onMove={(position, delta) => setOrderedIds(move(ids, position, delta))} />)}</div>
       </SortableContext>
     </DndContext>
-    <div className="direct-list-actions"><Button type="button" onClick={() => void save()} disabled={busy || !dirty || !valid}><Save size={14} />{busy ? '保存中…' : '保存分类'}</Button>{error && <p className="admin-error" role="alert">{error}</p>}</div>
+    <div className="direct-list-actions"><Button type="button" onClick={() => void save()} disabled={busy || !dirty || !valid}>{busy ? '保存中…' : '保存分类'}</Button>{error && <p className="admin-error" role="alert">{error}</p>}</div>
   </>
 }
 
