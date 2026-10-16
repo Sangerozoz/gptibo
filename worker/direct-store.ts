@@ -122,6 +122,30 @@ export async function directStoreAdminRoute(request: Request, env: Env, path: st
     return json(siteView(row!))
   }
   if (path === '/api/admin/direct-store/categories/order' && method === 'POST') return ordered(env, 'categories', await body(request))
+  if (path === '/api/admin/direct-store/categories/batch' && method === 'POST') {
+    const data = await body(request), orderVersion = versionField(data.orderVersion)
+    const known = (await db.prepare('SELECT id FROM direct_categories').all<{ id: string }>()).results.map(row => row.id)
+    if (!Array.isArray(data.categories) || data.categories.length !== known.length) throw new ApiError('分类列表无效，请刷新后重试。')
+    const categories = data.categories.map(value => {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) throw new ApiError('分类列表无效，请刷新后重试。')
+      const item = value as Record<string, unknown>
+      if (typeof item.id !== 'string' || !known.includes(item.id)) throw new ApiError('分类列表无效，请刷新后重试。')
+      return { id: item.id, nameZh: textField(item.nameZh, 32, '分类中文名称', true), nameEn: textField(item.nameEn, 32, '分类英文名称'), active: boolField(item.active, '分类状态'), version: versionField(item.version) }
+    })
+    if (new Set(categories.map(item => item.id)).size !== known.length) throw new ApiError('分类列表无效，请刷新后重试。')
+    const event = crypto.randomUUID(), now = Date.now()
+    const versionsMatch = categories.length
+      ? `(SELECT COUNT(*) FROM direct_categories WHERE ${categories.map(() => '(id=? AND version=?)').join(' OR ')})=?`
+      : '(SELECT COUNT(*) FROM direct_categories)=0'
+    const versionArgs = categories.flatMap(item => [item.id, item.version])
+    await db.batch([
+      db.prepare(`UPDATE direct_order_state SET version=version+1,change_id=? WHERE kind='categories' AND version=? AND (SELECT COUNT(*) FROM direct_categories)=? AND ${versionsMatch}`).bind(event, orderVersion, categories.length, ...versionArgs, ...(categories.length ? [categories.length] : [])),
+      ...categories.map((item, position) => db.prepare("UPDATE direct_categories SET name_zh=?,name_en=?,active=?,sort_order=?,version=version+1,change_id=?,updated_at=? WHERE id=? AND EXISTS(SELECT 1 FROM direct_order_state WHERE kind='categories' AND change_id=?)").bind(item.nameZh, item.nameEn, item.active, position, event, now, item.id, event)),
+      db.prepare("INSERT INTO admin_audit(id,action,target_id,note,created_at) SELECT ?,'direct-category-batch-update','categories',?,? FROM direct_order_state WHERE kind='categories' AND change_id=?").bind(event, `admin:${env.ADMIN_USERNAME} 保存分类列表`, now, event),
+    ])
+    await updated(env, event, '分类已更新，请刷新后重试。')
+    return json({ orderVersion: orderVersion + 1 })
+  }
   if (path === '/api/admin/direct-store/categories') {
     if (method === 'GET') {
       const rows = (await db.prepare('SELECT id,name_zh,name_en,sort_order,active,version FROM direct_categories ORDER BY sort_order,id').all<VersionedCategory>()).results
@@ -130,9 +154,10 @@ export async function directStoreAdminRoute(request: Request, env: Env, path: st
     }
     if (method !== 'POST') throw new ApiError('请求方式不支持。', 405)
     const data = await body(request), nameZh = textField(data.nameZh, 32, '分类中文名称', true), nameEn = textField(data.nameEn, 32, '分类英文名称')
+    const active = data.active === undefined ? 1 : boolField(data.active, '分类状态')
     const id = 'cat-' + crypto.randomUUID(), event = crypto.randomUUID(), now = Date.now()
     await db.batch([
-      db.prepare('INSERT INTO direct_categories(id,name_zh,name_en,sort_order,updated_at) VALUES (?,?,?,(SELECT COALESCE(MAX(sort_order),-1)+1 FROM direct_categories),?)').bind(id, nameZh, nameEn, now),
+      db.prepare('INSERT INTO direct_categories(id,name_zh,name_en,sort_order,active,updated_at) VALUES (?,?,?,(SELECT COALESCE(MAX(sort_order),-1)+1 FROM direct_categories),?,?)').bind(id, nameZh, nameEn, active, now),
       audit(env, event, 'direct-category-create', id, `admin:${env.ADMIN_USERNAME} 新增分类`),
     ])
     const row = await db.prepare('SELECT id,name_zh,name_en,sort_order,active,version FROM direct_categories WHERE id=?').bind(id).first<VersionedCategory>()

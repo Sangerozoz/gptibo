@@ -49,6 +49,45 @@ test('owner can create, reorder and deactivate categories without removing their
   assert.equal((await s.request(list + '/order', { ids, version: 0 }, s.admin)).status, 409)
 })
 
+test('new category accepts hidden state and is added after existing categories', async t => {
+  const s = await customerFixture(); t.after(() => s.db.close())
+  const response = await s.request('/api/admin/direct-store/categories', { nameZh: '暂不展示', nameEn: 'Hidden', active: false }, s.admin)
+  assert.equal(response.status, 201)
+  const created = (await response.json()).category
+  assert.equal(created.active, false)
+  const catalog = await (await s.request('/api/catalog')).json()
+  assert.equal(catalog.categories.at(-1).id, created.id)
+  assert.equal(catalog.categories.at(-1).active, false)
+})
+
+test('category table saves names, visibility and order together and rejects stale edits', async t => {
+  const s = await customerFixture(); t.after(() => s.db.close())
+  const endpoint = '/api/admin/direct-store/categories/batch'
+  const initial = await (await s.request('/api/admin/direct-store/categories', undefined, s.admin)).json()
+  const categories = initial.categories.map((item: { id: string; nameZh: string; nameEn: string; active: boolean; version: number }) => ({ ...item }))
+  categories.reverse()
+  categories[0].nameZh = '工具服务'
+  categories[0].nameEn = 'Tools'
+  categories[0].active = false
+  const payload = { categories, orderVersion: initial.orderVersion }
+  assert.equal((await s.request(endpoint, payload)).status, 401)
+  assert.equal((await s.request(endpoint, payload, s.admin)).status, 200)
+  const catalog = await (await s.request('/api/catalog')).json()
+  assert.deepEqual(catalog.categories.map((item: { id: string }) => item.id), ['tool', 'mail', 'learning', 'ai'])
+  assert.equal(catalog.categories[0].nameZh, '工具服务')
+  assert.equal(catalog.categories[0].nameEn, 'Tools')
+  assert.equal(catalog.categories[0].active, false)
+  assert.equal(s.db.prepare("SELECT count(*) n FROM admin_audit WHERE action='direct-category-batch-update'").get()!.n, 1)
+  assert.equal((await s.request(endpoint, payload, s.admin)).status, 409)
+  const fresh = await (await s.request('/api/admin/direct-store/categories', undefined, s.admin)).json()
+  const stale = fresh.categories.map((item: { id: string; nameZh: string; nameEn: string; active: boolean; version: number }) => ({ ...item }))
+  stale[0].nameZh = '不应保存'
+  stale[1].version -= 1
+  assert.equal((await s.request(endpoint, { categories: stale, orderVersion: fresh.orderVersion }, s.admin)).status, 409)
+  assert.equal((await (await s.request('/api/catalog')).json()).categories[0].nameZh, '工具服务')
+  assert.equal(s.db.prepare("SELECT count(*) n FROM admin_audit WHERE action='direct-category-batch-update'").get()!.n, 1)
+})
+
 test('owner product edits and ordering reach the public catalog, and hidden products reject direct checkout', async t => {
   const s = await customerFixture(); t.after(() => s.db.close())
   const buyer = (await s.request('/api/orders/client', {})).headers.get('Set-Cookie')!.split(';')[0]

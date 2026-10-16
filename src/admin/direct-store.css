@@ -26,7 +26,13 @@
 .direct-row-editor>.admin-error { width:100%; margin:0; }
 .direct-list-actions { display:flex; align-items:center; gap:14px; padding:18px 22px; }
 .direct-list-actions .admin-error { margin:0; }
-.direct-create { padding:18px 22px 22px; border-top:1px solid var(--border); }
+.direct-category-dialog { width:min(100% - 2rem,420px); max-width:420px; }
+.direct-category-create-form { display:grid; gap:16px; }
+.direct-category-create-form>label:not(.direct-checkbox) { display:grid; gap:7px; font-size:12px; }
+.direct-category-create-form .direct-checkbox { display:flex; align-items:center; gap:8px; font-size:12px; }
+.direct-category-position { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:12px; }
+.direct-category-position strong { font-weight:500; color:var(--muted-foreground); }
+.direct-category-create-form [data-slot="dialog-footer"] { margin-top:4px; }
 .direct-product-editor { padding:18px 0 0; }
 .direct-product-actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
 @media(max-width:700px) { .direct-admin-fields { grid-template-columns:1fr; } .direct-row-heading { flex-wrap:wrap; } .direct-move { width:100%; margin-left:0; } }
