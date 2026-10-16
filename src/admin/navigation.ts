@@ -8,7 +8,6 @@ const groups: AdminNavigationGroup[] = [
     { id: 'contacts', label: '联系方式' },
     { id: 'categories', label: '分类管理' },
     { id: 'products', label: '商品管理' },
-    { id: 'plans', label: '套餐与定价' },
     { id: 'interest', label: '上线提醒' },
   ] },
   { id: 'orders', label: '订单与客户', items: [

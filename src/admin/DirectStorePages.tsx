@@ -11,6 +11,7 @@ import { api, errorMessage } from '@/lib/api'
 import { useResource } from '@/lib/use-resource'
 import { prepareProductImage } from '@/lib/prepare-product-image'
 import { Feedback } from '@/components/workspace-loading'
+import { ProductPlans } from './ProductPlans'
 import type { DirectCategory, DirectProduct, DirectSite } from '../../shared/direct-store'
 import './direct-store.css'
 
@@ -180,7 +181,7 @@ export function CategoryAdminPage({ revision, onUpdated }: { revision: number; o
   return <section className="admin-panel"><div className="admin-panel-title"><h2>商品分类</h2><Button type="button" onClick={() => setCreateOpen(true)}>新增分类</Button></div><Feedback error={error} loading={loading} data={data} />{data?.categories && <CategoryList key={`${data.orderVersion}:${data.categories.map(item => item.version).join(':')}`} initial={{ categories: data.categories, orderVersion: data.orderVersion }} onUpdated={onUpdated} />}{createOpen && <CategoryCreate onClose={() => setCreateOpen(false)} onUpdated={onUpdated} />}</section>
 }
 
-function ProductEditor({ product, categories, onUpdated, onPlans }: { product: Product; categories: Category[]; onUpdated: () => void; onPlans: () => void }) {
+function ProductEditor({ product, categories, onUpdated }: { product: Product; categories: Category[]; onUpdated: () => void }) {
   const [nameZh, setNameZh] = useState(product.nameZh)
   const [nameEn, setNameEn] = useState(product.nameEn)
   const [descriptionZh, setDescriptionZh] = useState(product.descriptionZh)
@@ -206,14 +207,15 @@ function ProductEditor({ product, categories, onUpdated, onPlans }: { product: P
     <div className="direct-admin-fields"><label>中文简介<Input value={descriptionZh} onChange={event => setDescriptionZh(event.target.value)} maxLength={200} disabled={busy} /></label><label>英文简介<Input value={descriptionEn} onChange={event => setDescriptionEn(event.target.value)} maxLength={200} disabled={busy} /></label></div>
     <div className="direct-admin-fields"><label>所属分类<select value={categoryId} onChange={event => setCategoryId(event.target.value)} disabled={busy}>{categories.map(category => <option key={category.id} value={category.id}>{category.nameZh}{category.active ? '' : '（停用）'}</option>)}</select></label><label className="direct-checkbox"><input type="checkbox" checked={listed} onChange={event => setListed(event.target.checked)} disabled={busy} />前台上架</label></div>
     <label className="direct-field-title">商品图片</label><ImageInput url={imageUrl} onUpload={addImage} onRemove={() => { setImageMediaId(null); setImageUrl(null) }} busy={busy} />
-    <p className="admin-subtle">不上传图片时继续显示原有商品插画。套餐价格在“套餐与定价”中调整。</p>
-    <Feedback error={error} /><div className="direct-product-actions"><Button type="submit" disabled={busy || !nameZh.trim()}><Save size={14} />{busy ? '保存中…' : '保存商品'}</Button><Button type="button" variant="outline" onClick={onPlans}>编辑套餐售价</Button></div>
+    <p className="admin-subtle">不上传图片时继续显示原有商品插画。</p>
+    <Feedback error={error} /><div className="direct-product-actions"><Button type="submit" disabled={busy || !nameZh.trim()}><Save size={14} />{busy ? '保存中…' : '保存商品'}</Button></div>
   </form>
 }
 
-function ProductList({ initial, categories, onUpdated, onPlans }: { initial: { products: Product[]; orderVersion: number }; categories: Category[]; onUpdated: () => void; onPlans: () => void }) {
+function ProductList({ initial, categories, revision, onUpdated, partnerModeEnabled }: { initial: { products: Product[]; orderVersion: number }; categories: Category[]; revision: number; onUpdated: () => void; partnerModeEnabled: boolean }) {
   const [ids, setIds] = useState(initial.products.map(item => item.id))
   const [editing, setEditing] = useState<string | null>(null)
+  const [tab, setTab] = useState<'info' | 'plans'>('info')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const dirty = ids.some((id, index) => initial.products[index]?.id !== id)
@@ -222,11 +224,36 @@ function ProductList({ initial, categories, onUpdated, onPlans }: { initial: { p
     try { await api('/api/admin/direct-store/products/order', { ids, version: initial.orderVersion }); onUpdated() }
     catch (cause) { setError(errorMessage(cause)) } finally { setBusy(false) }
   }
-  return <><p className="admin-panel-footnote">下架后，前台商品卡片和详情页将隐藏，新的直接购买会被拒绝；已有订单仍可处理。拖动排序柄或使用上下按钮调整位置后请保存排序。新增商品需先接入套餐、下单与交付流程。</p><div className="direct-admin-list">{ids.map((id, index) => { const item = initial.products.find(product => product.id === id)!; return <div className="direct-admin-row" key={id} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); setIds(reposition(ids, event.dataTransfer.getData('text/plain'), id)) }}><div className="direct-row-heading"><span className="direct-drag-handle" draggable={!busy} title={`拖动排序 ${item.nameZh}`} onDragStart={event => event.dataTransfer.setData('text/plain', id)}><GripVertical size={16} /></span><Package size={17} /><strong>{item.nameZh}</strong><span>{item.listed ? '已上架' : '已下架'} · {categories.find(category => category.id === item.categoryId)?.nameZh ?? item.categoryId}</span><div className="direct-move"><Button variant="outline" size="icon" aria-label={`上移 ${item.nameZh}`} disabled={busy || index === 0} onClick={() => setIds(move(ids, index, -1))}><ArrowUp size={14} /></Button><Button variant="outline" size="icon" aria-label={`下移 ${item.nameZh}`} disabled={busy || index === ids.length - 1} onClick={() => setIds(move(ids, index, 1))}><ArrowDown size={14} /></Button><Button variant="outline" onClick={() => setEditing(editing === id ? null : id)}>{editing === id ? '收起' : '编辑'}</Button></div></div>{editing === id && <ProductEditor key={item.version} product={item} categories={categories} onUpdated={onUpdated} onPlans={onPlans} />}</div> })}</div><div className="direct-list-actions"><Button onClick={() => void saveOrder()} disabled={busy || !dirty}>保存商品排序</Button>{error && <p className="admin-error" role="alert">{error}</p>}</div></>
+  return <>
+    <p className="admin-panel-footnote">下架后，前台商品卡片和详情页将隐藏，新的直接购买会被拒绝；已有订单仍可处理。拖动排序柄或使用上下按钮调整位置后请保存排序。新增商品需先接入套餐、下单与交付流程。</p>
+    <div className="direct-admin-list">{ids.map((id, index) => {
+      const item = initial.products.find(product => product.id === id)!
+      return <div className="direct-admin-row" key={id} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); setIds(reposition(ids, event.dataTransfer.getData('text/plain'), id)) }}>
+        <div className="direct-row-heading">
+          <span className="direct-drag-handle" draggable={!busy} title={`拖动排序 ${item.nameZh}`} onDragStart={event => event.dataTransfer.setData('text/plain', id)}><GripVertical size={16} /></span>
+          <Package size={17} /><strong>{item.nameZh}</strong>
+          <span>{item.listed ? '已上架' : '已下架'} · {categories.find(category => category.id === item.categoryId)?.nameZh ?? item.categoryId}</span>
+          <div className="direct-move">
+            <Button variant="outline" size="icon" aria-label={`上移 ${item.nameZh}`} disabled={busy || index === 0} onClick={() => setIds(move(ids, index, -1))}><ArrowUp size={14} /></Button>
+            <Button variant="outline" size="icon" aria-label={`下移 ${item.nameZh}`} disabled={busy || index === ids.length - 1} onClick={() => setIds(move(ids, index, 1))}><ArrowDown size={14} /></Button>
+            <Button variant="outline" onClick={() => { setEditing(editing === id ? null : id); setTab('info') }}>{editing === id ? '收起' : '编辑'}</Button>
+          </div>
+        </div>
+        {editing === id && <div className="direct-product-details">
+          <div className="direct-product-tabs" role="group" aria-label={`${item.nameZh}管理内容`}>
+            <Button type="button" variant="ghost" aria-pressed={tab === 'info'} onClick={() => setTab('info')}>商品信息</Button>
+            <Button type="button" variant="ghost" aria-pressed={tab === 'plans'} onClick={() => setTab('plans')}>套餐与售价</Button>
+          </div>
+          {tab === 'info' ? <ProductEditor key={item.version} product={item} categories={categories} onUpdated={onUpdated} /> : <ProductPlans productId={item.id} listed={item.listed} revision={revision} onUpdated={onUpdated} partnerModeEnabled={partnerModeEnabled} />}
+        </div>}
+      </div>
+    })}</div>
+    <div className="direct-list-actions"><Button onClick={() => void saveOrder()} disabled={busy || !dirty}>保存商品排序</Button>{error && <p className="admin-error" role="alert">{error}</p>}</div>
+  </>
 }
 
-export function ProductAdminPage({ revision, onUpdated, onPlans }: { revision: number; onUpdated: () => void; onPlans: () => void }) {
+export function ProductAdminPage({ revision, onUpdated, partnerModeEnabled }: { revision: number; onUpdated: () => void; partnerModeEnabled: boolean }) {
   const products = useResource<List<Product>>('/api/admin/direct-store/products', revision)
   const categories = useResource<List<Category>>('/api/admin/direct-store/categories', revision)
-  return <section className="admin-panel"><div className="admin-panel-title"><h2>现有商品</h2><span>当前仅支持编辑已有商品</span></div><Feedback error={products.error || categories.error} loading={products.loading || categories.loading} data={products.data && categories.data} />{products.data?.products && categories.data?.categories && <ProductList key={`${products.data.orderVersion}:${products.data.products.map(item => item.version).join(':')}`} initial={{ products: products.data.products, orderVersion: products.data.orderVersion }} categories={categories.data.categories} onUpdated={onUpdated} onPlans={onPlans} />}</section>
+  return <section className="admin-panel"><div className="admin-panel-title"><h2>现有商品</h2><span>当前仅支持编辑已有商品</span></div><Feedback error={products.error || categories.error} loading={products.loading || categories.loading} data={products.data && categories.data} />{products.data?.products && categories.data?.categories && <ProductList key={products.data.orderVersion} initial={{ products: products.data.products, orderVersion: products.data.orderVersion }} categories={categories.data.categories} revision={revision} onUpdated={onUpdated} partnerModeEnabled={partnerModeEnabled} />}</section>
 }

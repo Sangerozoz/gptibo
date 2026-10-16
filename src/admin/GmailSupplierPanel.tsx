@@ -13,7 +13,7 @@ export function GmailSupplierPanel({ revision }: { revision: number }) {
     <Feedback error={config.error} loading={config.loading} data={config.data} shape="compact" />
     {config.data && <p className="admin-subtle">接口凭据：{config.data.configured ? '已配置' : '未配置'} · 自动购买：{config.data.checkoutEnabled ? '已启用' : '未启用'} · 成本上限：{config.data.maxCostCents !== null ? `¥${(config.data.maxCostCents / 100).toFixed(2)}` : '未设置'}</p>}
     {config.data?.configured && config.data.goodsId && <SupplierGoods id={config.data.goodsId} revision={revision} />}
-    <p className="admin-panel-footnote">售价与代理拿货价在套餐及代理管理中调整。采购超时只查询原采购单，不重复下单；进价超过成本上限或库存不足时暂停新购买。</p>
+    <p className="admin-panel-footnote">售价在商品管理中调整，代理拿货价在代理管理中调整。采购超时只查询原采购单，不重复下单；进价超过成本上限或库存不足时暂停新购买。</p>
   </section>
 }
 function SupplierGoods({ id, revision }: { id: number; revision: number }) {
