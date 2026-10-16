@@ -9,10 +9,7 @@ import { api, errorMessage, type CatalogPlan } from '@/lib/api'
 import { useResource } from '@/lib/use-resource'
 import { emailProduct } from '../../shared/email-products'
 import { isXGiftPlan } from '../../shared/xgift-products'
-import { parsePlanPrice, planUpdateNote, selectProductPlanDetails } from './product-plans'
-
-type PlanAudit = { id: string; target_id: string; note: string; created_at: number }
-const time = (value: number) => new Date(value).toLocaleString('zh-CN', { hour12: false })
+import { parsePlanPrice, planUpdateNote, selectProductPlans } from './product-plans'
 
 function PlanEditor({ plan, onClose, onUpdated, partnerModeEnabled }: { plan: CatalogPlan; onClose: () => void; onUpdated: () => void; partnerModeEnabled: boolean }) {
   const [note, setNote] = useState('')
@@ -109,21 +106,15 @@ function PlanRow({ plan, onUpdated, onSettings }: { plan: CatalogPlan; onUpdated
 
 export function ProductPlans({ productId, productName, listed, revision, onUpdated, partnerModeEnabled }: { productId: string; productName: string; listed: boolean; revision: number; onUpdated: () => void; partnerModeEnabled: boolean }) {
   const { data, error, loading } = useResource<{ plans: CatalogPlan[] }>('/api/admin/plans', revision)
-  const audit = useResource<{ rows: PlanAudit[] }>('/api/admin/audit', revision)
   const [edit, setEdit] = useState<CatalogPlan>()
   const [createOpen, setCreateOpen] = useState(false)
-  const selection = selectProductPlanDetails(productId, data?.plans ?? [], audit.data?.rows ?? [])
+  const plans = selectProductPlans(productId, data?.plans ?? [])
 
   return <div className="direct-product-plans">
     <div className="direct-product-plan-heading"><h3>套餐与售价</h3><Button type="button" onClick={() => setCreateOpen(true)}>新增</Button></div>
     <p className="admin-subtle">只有商品已上架且套餐允许创建新订单时，客户才可购买。{listed ? '' : '当前商品已下架。'}</p>
     <Feedback error={error} loading={loading} data={data} />
-    {data && (selection.plans.length ? <div className="admin-table-scroll"><table className="admin-table"><thead><tr><th>套餐</th><th>标签</th><th>售价（元）</th><th>上架状态</th><th><span className="sr-only">操作</span></th></tr></thead><tbody>{selection.plans.map(plan => <PlanRow key={`${plan.id}:${plan.version}`} plan={plan} onUpdated={onUpdated} onSettings={() => setEdit(plan)} />)}</tbody></table></div> : <p className="direct-product-empty">该商品暂无套餐。新增套餐需先接入下单与交付流程。</p>)}
-    {selection.plans.length > 0 && <div className="direct-product-plan-audit">
-      <h3>套餐修改记录</h3>
-      <Feedback error={audit.error} loading={audit.loading} data={audit.data} shape="compact" />
-      {audit.data && (selection.audit.length ? <div className="admin-audit-list">{selection.audit.map(row => <div key={row.id}><strong>{row.target_id}</strong><span>{row.note}</span><time>{time(row.created_at)}</time></div>)}</div> : <p className="direct-product-empty">暂无修改记录。</p>)}
-    </div>}
+    {data && (plans.length ? <div className="admin-table-scroll"><table className="admin-table"><thead><tr><th>套餐</th><th>标签</th><th>售价（元）</th><th>上架状态</th><th><span className="sr-only">操作</span></th></tr></thead><tbody>{plans.map(plan => <PlanRow key={`${plan.id}:${plan.version}`} plan={plan} onUpdated={onUpdated} onSettings={() => setEdit(plan)} />)}</tbody></table></div> : <p className="direct-product-empty">该商品暂无套餐。新增套餐需先接入下单与交付流程。</p>)}
     {edit && <PlanEditor plan={edit} onClose={() => setEdit(undefined)} onUpdated={onUpdated} partnerModeEnabled={partnerModeEnabled} />}
     <Dialog open={createOpen} onOpenChange={setCreateOpen}>
       <DialogContent className="direct-category-dialog">

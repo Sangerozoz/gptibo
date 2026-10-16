@@ -1,24 +1,15 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { parsePlanPrice, planUpdateNote, selectProductPlanDetails } from '../src/admin/product-plans.ts'
+import { parsePlanPrice, planUpdateNote, selectProductPlans } from '../src/admin/product-plans.ts'
 
-test('product detail shows only its plans and their modification history', () => {
+test('product detail shows only its plans', () => {
   const plans = [
     { id: 'plus', product_id: 'chatgpt' },
     { id: 'sms', product_id: 'codex-sms' },
     { id: 'pro', product_id: 'chatgpt' },
   ]
-  const audit = [
-    { target_id: 'sms', note: 'SMS changed' },
-    { target_id: 'pro', note: 'Pro changed' },
-    { target_id: 'plus', note: 'Plus changed' },
-  ]
-
-  assert.deepEqual(selectProductPlanDetails('chatgpt', plans, audit), {
-    plans: [plans[0], plans[2]],
-    audit: [audit[1], audit[2]],
-  })
-  assert.deepEqual(selectProductPlanDetails('new-product', plans, audit), { plans: [], audit: [] })
+  assert.deepEqual(selectProductPlans('chatgpt', plans), [plans[0], plans[2]])
+  assert.deepEqual(selectProductPlans('new-product', plans), [])
 })
 
 test('inline price accepts only positive yuan amounts with at most two decimal places', () => {

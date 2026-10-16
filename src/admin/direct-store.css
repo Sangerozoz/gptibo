@@ -58,9 +58,6 @@
 .direct-plan-availability input { width:16px; height:16px; accent-color:var(--primary); }
 .direct-plan-actions { display:flex; align-items:center; gap:6px; }
 .direct-plan-actions + .admin-error { min-width:150px; margin:8px 0 0; }
-.direct-product-plan-audit { padding-top:16px; border-top:1px solid var(--border); }
-.direct-product-plan-audit h3 { margin:0 0 12px; font-size:14px; }
-.direct-product-plan-audit .admin-audit-list { padding:0; }
 .direct-product-empty { margin:0; padding:16px; color:var(--muted-foreground); font-size:12px; }
 @media(max-width:700px) { .direct-admin-fields { grid-template-columns:1fr; } .direct-row-heading { flex-wrap:wrap; } .direct-move { width:100%; margin-left:0; } }
 @media(max-width:700px) { .direct-category-heading { flex-wrap:nowrap; } .direct-category-heading .direct-move { width:auto; margin-left:auto; } }
