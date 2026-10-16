@@ -111,7 +111,7 @@ function reposition(ids: readonly string[], from: string, to: string) {
   return next
 }
 
-function CategoryList({ initial, products, onUpdated }: { initial: { categories: Category[]; orderVersion: number }; products: Product[]; onUpdated: () => void }) {
+function CategoryList({ initial, onUpdated }: { initial: { categories: Category[]; orderVersion: number }; onUpdated: () => void }) {
   const [orderedIds, setOrderedIds] = useState(initial.categories.map(item => item.id))
   const ids = [...orderedIds, ...initial.categories.map(item => item.id).filter(id => !orderedIds.includes(id))]
   const [drafts, setDrafts] = useState<Record<string, Partial<Pick<Category, 'nameZh' | 'nameEn' | 'active'>>>>({})
@@ -144,7 +144,7 @@ function CategoryList({ initial, products, onUpdated }: { initial: { categories:
     <div className="direct-admin-list">{ids.map((id, index) => {
       const draft = draftFor(id)
       return <div className="direct-admin-row" key={id} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); setOrderedIds(reposition(ids, event.dataTransfer.getData('text/plain'), id)) }}>
-        <div className="direct-row-heading"><span className="direct-drag-handle" draggable={!busy} title={`拖动排序 ${draft.nameZh}`} onDragStart={event => event.dataTransfer.setData('text/plain', id)}><GripVertical size={16} /></span><strong>{draft.nameZh || '未命名分类'}</strong><span>{draft.active ? '显示中' : '已停用'} · {products.filter(product => product.categoryId === id).length} 件商品</span><div className="direct-move"><Button variant="outline" size="icon" aria-label={`上移 ${draft.nameZh}`} disabled={busy || index === 0} onClick={() => setOrderedIds(move(ids, index, -1))}><ArrowUp size={14} /></Button><Button variant="outline" size="icon" aria-label={`下移 ${draft.nameZh}`} disabled={busy || index === ids.length - 1} onClick={() => setOrderedIds(move(ids, index, 1))}><ArrowDown size={14} /></Button></div></div>
+        <div className="direct-row-heading direct-category-heading"><span className="direct-drag-handle" draggable={!busy} title={`拖动排序 ${draft.nameZh}`} onDragStart={event => event.dataTransfer.setData('text/plain', id)}><GripVertical size={16} /></span><strong>{draft.nameZh || '未命名分类'}</strong><div className="direct-move"><Button variant="outline" size="icon" aria-label={`上移 ${draft.nameZh}`} disabled={busy || index === 0} onClick={() => setOrderedIds(move(ids, index, -1))}><ArrowUp size={14} /></Button><Button variant="outline" size="icon" aria-label={`下移 ${draft.nameZh}`} disabled={busy || index === ids.length - 1} onClick={() => setOrderedIds(move(ids, index, 1))}><ArrowDown size={14} /></Button></div></div>
         <div className="direct-row-editor"><label>中文名称<Input value={draft.nameZh} onChange={event => edit(id, { nameZh: event.target.value })} maxLength={32} required disabled={busy} /></label><label>英文名称<Input value={draft.nameEn} onChange={event => edit(id, { nameEn: event.target.value })} maxLength={32} disabled={busy} /></label><label className="direct-checkbox"><input type="checkbox" checked={draft.active} onChange={event => edit(id, { active: event.target.checked })} disabled={busy} />显示分类</label></div>
       </div>
     })}</div>
@@ -154,9 +154,8 @@ function CategoryList({ initial, products, onUpdated }: { initial: { categories:
 
 export function CategoryAdminPage({ revision, onUpdated }: { revision: number; onUpdated: () => void }) {
   const { data, error, loading } = useResource<List<Category>>('/api/admin/direct-store/categories', revision)
-  const products = useResource<List<Product>>('/api/admin/direct-store/products', revision)
   const [createOpen, setCreateOpen] = useState(false)
-  return <section className="admin-panel"><div className="admin-panel-title"><h2>商品分类</h2><Button type="button" onClick={() => setCreateOpen(true)}>新增分类</Button></div><Feedback error={error || products.error} loading={loading || products.loading} data={data && products.data} />{data?.categories && products.data?.products && <CategoryList key={`${data.orderVersion}:${data.categories.map(item => item.version).join(':')}`} initial={{ categories: data.categories, orderVersion: data.orderVersion }} products={products.data.products} onUpdated={onUpdated} />}{createOpen && <CategoryCreate onClose={() => setCreateOpen(false)} onUpdated={onUpdated} />}</section>
+  return <section className="admin-panel"><div className="admin-panel-title"><h2>商品分类</h2><Button type="button" onClick={() => setCreateOpen(true)}>新增分类</Button></div><Feedback error={error} loading={loading} data={data} />{data?.categories && <CategoryList key={`${data.orderVersion}:${data.categories.map(item => item.version).join(':')}`} initial={{ categories: data.categories, orderVersion: data.orderVersion }} onUpdated={onUpdated} />}{createOpen && <CategoryCreate onClose={() => setCreateOpen(false)} onUpdated={onUpdated} />}</section>
 }
 
 function ProductEditor({ product, categories, onUpdated, onPlans }: { product: Product; categories: Category[]; onUpdated: () => void; onPlans: () => void }) {
