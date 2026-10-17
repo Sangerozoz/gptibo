@@ -28,6 +28,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { CopyButton } from '@/components/copy-button'
+import { ImageUploadField } from '@/components/image-upload-field'
 import { api, errorMessage } from '@/lib/api'
 import { useResource } from '@/lib/use-resource'
 import { money, toCents } from './model'
@@ -1202,35 +1203,7 @@ function StoreEditor({
                 {error || uploadError}
               </p>
             )}
-            <label>
-              Logo
-              <Input
-                type="file"
-                accept="image/png,image/jpeg"
-                disabled={busy || uploading}
-                onChange={(e) => {
-                  const f = e.target.files?.[0]
-                  if (f) void upload(f)
-                }}
-              />
-            </label>
-            {settings.logo && (
-              <div>
-                <img
-                  src={settings.logo}
-                  width={48}
-                  height={48}
-                  alt="商店 Logo"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setSettings({ ...settings, logo: '' })}
-                >
-                  移除 Logo
-                </Button>
-              </div>
-            )}
+            <div><span>Logo</span><ImageUploadField name="商店 Logo" url={settings.logo} busy={busy || uploading} onUpload={file => void upload(file)} onRemove={() => setSettings({ ...settings, logo: '' })} /></div>
             <label>
               商店名称
               <Input

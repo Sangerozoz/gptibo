@@ -4,11 +4,6 @@
 .direct-admin-form label,.direct-row-editor label { display:grid; gap:7px; color:var(--foreground); font-size:12px; }
 .direct-admin-form input,.direct-row-editor input { min-width:0; }
 .direct-field-title { font-size:12px; font-weight:500; }
-.direct-image-input { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.direct-image-input>img,.direct-image-placeholder { width:110px; height:80px; object-fit:contain; border:1px solid var(--border); border-radius:10px; background:var(--secondary); }
-.direct-image-placeholder { display:grid; place-items:center; color:var(--muted-foreground); font-size:10px; }
-.direct-upload-button { position:relative; display:inline-flex!important; align-items:center; justify-content:center; cursor:pointer; border:1px solid var(--border); border-radius:8px; padding:9px 13px; }
-.direct-upload-button input { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
 .direct-admin-list { display:grid; }
 .direct-admin-row { padding:18px 22px; border-bottom:1px solid var(--border); }
 .direct-row-heading { display:flex; align-items:center; gap:12px; min-height:38px; }

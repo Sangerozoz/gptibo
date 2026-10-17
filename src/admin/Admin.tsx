@@ -2,6 +2,7 @@ import TicketWorkspace from '@/components/ticket-workspace'
 import { StoreSettingsPage, CategoryAdminPage, ProductAdminPage } from './DirectStorePages'
 import { getAdminNavigation } from './navigation'
 import type { DirectSite } from '../../shared/direct-store'
+import type { AccountingReport } from '../../shared/accounting'
 import { TicketAlerts } from './TicketAlerts'
 import { RechargeRecoveryPanel, type RechargeCredential } from './RechargeRecoveryPanel'
 import SecurityPage from './SecurityPage'
@@ -56,7 +57,7 @@ const viewIcons: Record<string, LucideIcon> = {
   integrations: Plug, security: ShieldCheck,
 }
 type Session = { authenticated: boolean; configured: boolean; mailReady: boolean; username?: string; partnerModeEnabled?: boolean; devMode?: boolean }
-type Overview = { stats: { total: number; pending: number; active: number; completed: number; refund_amount: number; paid_amount: number }; interest: { total: number }; recent: ServerOrder[] }
+type Overview = { stats: { total: number; pending: number; active: number; completed: number }; recent: ServerOrder[] }
 type Detail = { order: ServerOrder & { platformStatus: PlatformOrderStatus | null; rechargeCredential?: RechargeCredential }; events: { id: string; actor: string; action: string; note: string; to_status: string; created_at: number }[] }
 function SettlementBadge({ status }: { status?: 'pending' | 'paid' | null }) {
   if (!status) return null
@@ -71,7 +72,8 @@ function Pagination({ page, total, onChange }: { page: number; total: number; on
 }
 function OverviewPage({ revision, onSelect, onOrders, onVisitors, partnerModeEnabled }: { revision: number; onSelect: (id: string) => void; onOrders: () => void; onVisitors?: () => void; partnerModeEnabled: boolean }) {
   const { data, error, loading } = useResource<Overview>('/api/admin/overview', revision)
-  return <><Feedback error={error} loading={loading} data={data} shape="overview" />{data && <><div className="admin-metrics">{[['全部订单', data.stats.total], ['待付款', data.stats.pending ?? 0], ['处理中 / 需处理', data.stats.active ?? 0], ['已完成', data.stats.completed ?? 0]].map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div><div className="admin-summary"><div><span>净收款（扣退款）</span><strong>{money(data.stats.paid_amount)}</strong></div><div><span>累计退款</span><strong>{money(data.stats.refund_amount ?? 0)}</strong></div><div><span>上线提醒登记</span><strong>{data.interest.total}<small>条</small></strong></div></div><div className="admin-overview-charts"><VisitorStats endpoint="/api/admin/visitors" revision={revision} title="全站访客与流量趋势" description="全站各渠道与直营商店的独立访客走势" action={onVisitors && <Button variant="ghost" size="sm" onClick={onVisitors}>{partnerModeEnabled ? '各商店分布' : '访客详情'} <ArrowUpRight size={14} /></Button>} />{partnerModeEnabled && <PartnerRankingChart revision={revision} />}</div><section className="admin-panel"><div className="admin-panel-title"><h2>最近订单</h2><Button variant="ghost" onClick={onOrders}>全部订单 <ArrowUpRight size={15} /></Button></div><OrderTable orders={data.recent} onSelect={onSelect} /></section></>}</>
+  const { data: finance, error: financeError, loading: financeLoading } = useResource<AccountingReport>('/api/admin/accounting/report?status=all', revision)
+  return <><Feedback error={error} loading={loading} data={data} shape="overview" />{data && <><div className="admin-metrics">{[['全部订单', data.stats.total], ['待付款', data.stats.pending ?? 0], ['处理中 / 需处理', data.stats.active ?? 0], ['已完成', data.stats.completed ?? 0]].map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div><div className="admin-summary"><div><span>实付营业额</span><strong>{finance ? money(finance.totals.paid_cents) : '—'}</strong></div><div><span>累计退款</span><strong>{finance ? money(finance.totals.refund_cents) : '—'}</strong></div><div><span>已完成订单采购成本</span><strong>{finance ? finance.totals.missing_cost_count ? '待补成本' : money(finance.totals.cost_cents) : '—'}</strong></div><div><span>已完成订单利润</span><strong>{finance ? finance.totals.profit_cents === null ? '待核对' : money(finance.totals.profit_cents) : '—'}</strong></div><p>营业额按实际付款统计，未扣退款；成本和订单利润仅计已完成订单；订单利润已扣退款、采购成本及代理分成，未扣其他经营费用。</p></div><Feedback error={financeError} loading={financeLoading} data={finance} shape="compact" /><div className="admin-overview-charts"><VisitorStats endpoint="/api/admin/visitors" revision={revision} title="全站访客与流量趋势" description="全站各渠道与直营商店的独立访客走势" action={onVisitors && <Button variant="ghost" size="sm" onClick={onVisitors}>{partnerModeEnabled ? '各商店分布' : '访客详情'} <ArrowUpRight size={14} /></Button>} />{partnerModeEnabled && <PartnerRankingChart revision={revision} />}</div><section className="admin-panel"><div className="admin-panel-title"><h2>最近订单</h2><Button variant="ghost" onClick={onOrders}>全部订单 <ArrowUpRight size={15} /></Button></div><OrderTable orders={data.recent} onSelect={onSelect} /></section></>}</>
 }
 function OrdersPage({ revision, onSelect }: { revision: number; onSelect: (id: string) => void }) {
   const [search, setSearch] = useState(''); const [q, setQ] = useState(''); const [status, setStatus] = useState(''); const [plan, setPlan] = useState(''); const [page, setPage] = useState(1)

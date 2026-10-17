@@ -2,15 +2,7 @@
 .support-settings-form { padding:24px; max-width:608px; }
 .support-settings-form [data-slot=field-label] { font-size:13px; }
 .support-settings-form input { height:44px; }
-.support-qr-input { display:flex; align-items:center; gap:16px; min-height:100px; margin-top:10px; }
-.support-qr-input>img,.support-qr-placeholder { width:96px; height:96px; flex-shrink:0; border:1px solid var(--border); border-radius:10px; background:var(--secondary); object-fit:contain; }
-.support-qr-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--muted-foreground); text-align:center; font-size:11px; }
-.support-qr-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; min-width:0; }
-.support-qr-upload { position:relative; display:inline-flex; align-items:center; min-height:36px; padding:0 12px; border:1px solid var(--border); border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; }
-.support-qr-upload:hover { background:var(--secondary); }
-.support-qr-upload:focus-within { outline:2px solid var(--ring); outline-offset:2px; }
-.support-qr-upload input { position:absolute; width:1px; height:1px; opacity:0; }
-.support-qr-actions small { flex-basis:100%; color:var(--muted-foreground); font-size:11px; line-height:1.5; }
+.support-qr-input { margin-top:10px; }
 .support-settings-form [data-slot=field-description] { font-size:12px; line-height:1.8; }
 .support-settings-form>button { min-height:44px; margin-top:24px; }
 .support-settings-success { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--primary); padding:0 24px 24px; }

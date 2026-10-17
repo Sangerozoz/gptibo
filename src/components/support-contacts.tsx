@@ -1,12 +1,13 @@
 import { useStorefrontI18n } from '@/lib/storefront-i18n'
 import { useEffect, useState } from 'react'
-import { ArrowRight, Check, ImagePlus, RefreshCw } from 'lucide-react'
+import { ArrowRight, Check, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { CopyButton } from '@/components/copy-button'
 import { Feedback } from '@/components/workspace-loading'
+import { ImageUploadField } from '@/components/image-upload-field'
 import { api, errorMessage } from '@/lib/api'
 import { useResource } from '@/lib/use-resource'
 import { prepareProductImage } from '@/lib/prepare-product-image'
@@ -53,10 +54,7 @@ function ContactsForm({ endpoint, settings, loading, readOnly, onSaved, onEditin
 }
 
 function ContactQrInput({ label, url, busy, readOnly, onUpload, onRemove }: { label: string; url?: string; busy: boolean; readOnly: boolean; onUpload: (file: File) => Promise<void>; onRemove: () => void }) {
-  return <div className="support-qr-input">
-    {url ? <img src={url} alt={`${label}联系二维码预览`} width="96" height="96" /> : <div className="support-qr-placeholder"><ImagePlus size={18} /><span>未上传二维码</span></div>}
-    {!readOnly && <div className="support-qr-actions"><label className="support-qr-upload">{busy ? '上传中…' : url ? '更换二维码' : '上传二维码'}<input type="file" accept="image/png,image/jpeg" disabled={busy} onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; if (file) void onUpload(file) }} /></label>{url && <Button type="button" variant="ghost" disabled={busy} onClick={onRemove}>移除</Button>}<small>PNG / JPG，上传后请保存联系方式</small></div>}
-  </div>
+  return <div className="support-qr-input"><ImageUploadField name={`${label}二维码`} url={url} busy={busy} readOnly={readOnly} onUpload={file => void onUpload(file)} onRemove={onRemove} /></div>
 }
 
 export function SupportContactsPanel({ endpoint, revision = 0, title = '平台联系方式', description = '显示在平台商店的“联系支持”中。', readOnly = false, onSummaryChange }: { endpoint: string; revision?: number; title?: string; description?: string; readOnly?: boolean; onSummaryChange?: (summary: string) => void }) {

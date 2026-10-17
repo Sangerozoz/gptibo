@@ -1,9 +1,9 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { CSS } from '@dnd-kit/utilities'
-import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, GripVertical, ImagePlus, Package, Save } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, GripVertical, Package, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -11,6 +11,7 @@ import { api, errorMessage } from '@/lib/api'
 import { useResource } from '@/lib/use-resource'
 import { prepareProductImage } from '@/lib/prepare-product-image'
 import { Feedback } from '@/components/workspace-loading'
+import { ImageUploadField } from '@/components/image-upload-field'
 import { ProductPlans } from './ProductPlans'
 import type { DirectCategory, DirectProduct, DirectSite } from '../../shared/direct-store'
 import './direct-store.css'
@@ -25,19 +26,14 @@ async function upload(file: File) {
   return api<{ id: string; url: string }>('/api/admin/direct-store/media', { image })
 }
 
-function ImageInput({ url, onUpload, onRemove, busy }: { url: string | null; onUpload: (file: File) => Promise<void>; onRemove: () => void; busy: boolean }) {
+function ImageInput({ name, url, onUpload, onRemove, busy }: { name: string; url: string | null; onUpload: (file: File) => Promise<void>; onRemove: () => void; busy: boolean }) {
   const [error, setError] = useState('')
-  async function changed(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
+  async function changed(file: File) {
     setError('')
     try { await onUpload(file) } catch (cause) { setError(cause instanceof Error ? cause.message : '图片上传失败，请重试。') }
   }
-  return <div className="direct-image-input">
-    {url ? <img src={url} alt="当前图片" /> : <span className="direct-image-placeholder"><ImagePlus size={20} />未设置图片</span>}
-    <label className="direct-upload-button">{busy ? '上传中…' : '上传 PNG / JPG'}<input type="file" accept="image/png,image/jpeg" disabled={busy} onChange={event => void changed(event)} /></label>
-    {url && <Button type="button" variant="ghost" disabled={busy} onClick={onRemove}>移除图片</Button>}
+  return <div>
+    <ImageUploadField name={name} url={url} busy={busy} onUpload={file => void changed(file)} onRemove={onRemove} />
     {error && <p className="admin-error" role="alert">{error}</p>}
   </div>
 }
@@ -63,7 +59,7 @@ function SiteForm({ initial, onUpdated }: { initial: Site; onUpdated: () => void
   return <form className="direct-admin-form" onSubmit={event => void save(event)}>
     <p className="admin-subtle">中文站显示中文名称，英文站显示英文名称。英文留空时显示中文名称。</p>
     <div className="direct-admin-fields"><label>中文店名<Input value={nameZh} onChange={event => setNameZh(event.target.value)} maxLength={32} required disabled={busy} /></label><label>英文店名<Input value={nameEn} onChange={event => setNameEn(event.target.value)} maxLength={32} disabled={busy} /></label></div>
-    <label className="direct-field-title">店铺 Logo</label><ImageInput url={logoUrl} onUpload={addLogo} onRemove={() => { setLogoMediaId(null); setLogoUrl(null) }} busy={busy} />
+    <label className="direct-field-title">店铺 Logo</label><ImageInput name="店铺 Logo" url={logoUrl} onUpload={addLogo} onRemove={() => { setLogoMediaId(null); setLogoUrl(null) }} busy={busy} />
     <p className="admin-subtle">名称和 Logo 保存后会同步到前台。发件邮箱地址仍由服务器配置。</p>
     <Feedback error={error} />{notice && <p className="admin-success" role="status">{notice}</p>}
     <Button type="submit" disabled={busy || !nameZh.trim()}><Save size={15} />{busy ? '保存中…' : '保存店铺设置'}</Button>
@@ -201,7 +197,7 @@ function ProductEditor({ product, categories, onUpdated, onClose }: { product: P
         <div className="direct-admin-fields"><label>中文名称<Input value={nameZh} onChange={event => setNameZh(event.target.value)} maxLength={64} required disabled={busy} /></label><label>英文名称<Input value={nameEn} onChange={event => setNameEn(event.target.value)} maxLength={64} disabled={busy} /></label></div>
         <div className="direct-admin-fields"><label>中文简介<Input value={descriptionZh} onChange={event => setDescriptionZh(event.target.value)} maxLength={200} disabled={busy} /></label><label>英文简介<Input value={descriptionEn} onChange={event => setDescriptionEn(event.target.value)} maxLength={200} disabled={busy} /></label></div>
         <div className="direct-admin-fields"><label>所属分类<select value={categoryId} onChange={event => setCategoryId(event.target.value)} disabled={busy}>{categories.map(category => <option key={category.id} value={category.id}>{category.nameZh}{category.active ? '' : '（停用）'}</option>)}</select></label><label className="direct-checkbox"><input type="checkbox" checked={listed} onChange={event => setListed(event.target.checked)} disabled={busy} />前台上架</label></div>
-        <label className="direct-field-title">商品图片</label><ImageInput url={imageUrl} onUpload={addImage} onRemove={() => { setImageMediaId(null); setImageUrl(null) }} busy={busy} />
+        <label className="direct-field-title">商品图片</label><ImageInput name="商品" url={imageUrl} onUpload={addImage} onRemove={() => { setImageMediaId(null); setImageUrl(null) }} busy={busy} />
         <p className="admin-subtle">不上传图片时继续显示原有商品插画。</p>
         <Feedback error={error} />
         <DialogFooter><Button type="button" variant="outline" onClick={onClose} disabled={busy}>取消</Button><Button type="submit" disabled={busy || !nameZh.trim()}>{busy ? '保存中…' : '保存商品'}</Button></DialogFooter>

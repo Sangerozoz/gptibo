@@ -1,11 +1,12 @@
 import { prepareLogo } from '@/lib/prepare-logo'
-import { useEffect, useRef, useState } from 'react'
-import { Check, ImagePlus, RefreshCw, Upload } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Check, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { api, errorMessage } from '@/lib/api'
 import { useResource } from '@/lib/use-resource'
 import { ShopBrand } from '@/components/shop-brand'
+import { ImageUploadField } from '@/components/image-upload-field'
 import './branding-settings.css'
 
 type Branding = { name: string; logo: string; version: number; pageTitle?: string; headline?: string; description?: string }
@@ -18,7 +19,6 @@ function BrandingForm({ value, endpoint, readOnly, loading, onSaved }: { value: 
   const [busy, setBusy] = useState(false)
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState('')
-  const fileInput = useRef<HTMLInputElement>(null)
   const locked = busy || processing || loading || readOnly
   const dirty = name !== value.name || logo !== value.logo || Object.entries(copy).some(([key, text]) => text !== (value[key as keyof typeof copy] ?? ''))
   const invalidCopy = Array.from(copy.pageTitle.trim()).length > 80 || Array.from(copy.headline.trim()).length > 80 || Array.from(copy.description.trim()).length > 200
@@ -42,11 +42,7 @@ function BrandingForm({ value, endpoint, readOnly, loading, onSaved }: { value: 
       <p id="shop-name-help">显示在商店页头、页脚，未单独设置网页标题时也用于浏览器标签。留空显示“商店”。</p>
       {([{ key: 'pageTitle', label: '网页标题', max: 80, placeholder: name.trim() || '商店', help: '显示在浏览器标签和 HTML title，留空使用店铺名称。' }, { key: 'headline', label: '首页标题', max: 80, placeholder: '商店。找到适合你的服务。', help: '替换首页的“商店。找到适合你的服务。”，留空使用默认文案。' }, { key: 'description', label: '首页简介 / 网页描述', max: 200, placeholder: 'AI 订阅、语言学习与工具服务，在这里按需选择。', help: '同时用于首页简介和 HTML description，留空使用不含平台品牌的默认描述。' }] as const).map(field => <div className="branding-copy-field" key={field.key}><label htmlFor={'shop-' + field.key}>{field.label}<span>{Array.from(copy[field.key]).length}/{field.max}</span></label><Input id={'shop-' + field.key} value={copy[field.key]} onChange={event => setCopy(previous => ({ ...previous, [field.key]: event.target.value }))} placeholder={field.placeholder} maxLength={field.max * 2} disabled={locked} aria-describedby={'shop-' + field.key + '-help'} /><p id={'shop-' + field.key + '-help'}>{field.help}</p></div>)}
       <div className="branding-logo-label">店铺 Logo</div>
-      <div className="branding-upload">
-        <div className="branding-logo-sample">{logo ? <img src={logo} alt="已选择的店铺 Logo" /> : <ImagePlus size={26} strokeWidth={1.4} />}</div>
-        <div><div className="branding-upload-actions"><Button type="button" variant="outline" size="sm" disabled={locked} onClick={() => fileInput.current?.click()}><Upload size={14} />{processing ? '上传中…' : logo ? '更换图片' : '上传 Logo'}</Button>{logo && <Button type="button" variant="ghost" size="sm" disabled={locked} onClick={() => setLogo('')}>移除</Button>}</div><p>PNG / JPG，最大 5 MB。建议使用正方形图片。</p></div>
-        <Input ref={fileInput} type="file" accept="image/png,image/jpeg" aria-label="选择店铺 Logo" hidden disabled={locked} onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; if (file) void upload(file) }} />
-      </div>
+      <ImageUploadField name="店铺 Logo" url={logo} busy={locked} readOnly={readOnly} onUpload={file => void upload(file)} onRemove={() => setLogo('')} />
       {error && <p className="branding-error" role="alert">{error}</p>}
       {!readOnly && <div className="branding-save"><Button type="submit" disabled={locked || !dirty || invalidCopy || Array.from(name.trim()).length > 32}>{busy ? '保存中…' : '保存店铺形象'}</Button><span>{dirty ? '有未保存的更改' : '当前设置已保存'}</span></div>}
     </div>

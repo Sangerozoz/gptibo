@@ -31,7 +31,7 @@
 .admin-metrics>div+div { border-left:1px solid var(--border); }
 .admin-metrics span { color:var(--muted-foreground); font-size:12px; }
 .admin-metrics strong { font-size:32px; font-weight:550; font-variant-numeric:tabular-nums; letter-spacing:-1px; }
-.admin-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:15px 24px 25px; }
+.admin-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; padding:15px 24px 25px; }
 .admin-summary>div { display:grid; gap:8px; }
 .admin-summary span { font-size:11px; color:var(--muted-foreground); }
 .admin-summary strong { font-size:20px; font-weight:500; }
@@ -168,7 +168,7 @@
   .admin-metrics { grid-template-columns:1fr 1fr; gap:24px 0; padding-block:20px; }
   .admin-metrics>div:nth-child(3) { border-left:0; }
   .admin-metrics strong { font-size:28px; }
-  .admin-summary { padding-inline:4px; gap:14px; }
+  .admin-summary { grid-template-columns:repeat(2,minmax(0,1fr)); padding-inline:4px; gap:14px; }
   .admin-summary strong { font-size:17px; }
   .admin-panel-title { padding:14px; flex-wrap:wrap; }
   .admin-filters { padding:14px; }
