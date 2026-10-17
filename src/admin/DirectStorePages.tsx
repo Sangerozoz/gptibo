@@ -57,7 +57,6 @@ function SiteForm({ initial, onUpdated }: { initial: Site; onUpdated: () => void
     finally { setBusy(false) }
   }
   return <form className="direct-admin-form" onSubmit={event => void save(event)}>
-    <p className="admin-subtle">中文站显示中文名称，英文站显示英文名称。英文留空时显示中文名称。</p>
     <div className="direct-admin-fields"><label>中文店名<Input value={nameZh} onChange={event => setNameZh(event.target.value)} maxLength={32} required disabled={busy} /></label><label>英文店名<Input value={nameEn} onChange={event => setNameEn(event.target.value)} maxLength={32} disabled={busy} /></label></div>
     <label className="direct-field-title">店铺 Logo</label><ImageInput name="店铺 Logo" url={logoUrl} onUpload={addLogo} onRemove={() => { setLogoMediaId(null); setLogoUrl(null) }} busy={busy} />
     <p className="admin-subtle">名称和 Logo 保存后会同步到前台。发件邮箱地址仍由服务器配置。</p>
@@ -153,7 +152,6 @@ function CategoryList({ initial, onUpdated }: { initial: { categories: Category[
     catch (cause) { setError(errorMessage(cause)) } finally { setBusy(false) }
   }
   return <>
-    <p className="admin-panel-footnote">关闭“显示分类”后，前台分类筛选会隐藏；其中已上架商品仍显示在“全部商品”。可拖动排序柄或使用上下按钮调整位置，修改完成后统一保存。</p>
     <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis]} onDragEnd={finishDrag}>
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         <div className="direct-admin-list">{ids.map((id, index) => <SortableCategoryRow key={id} id={id} index={index} total={ids.length} draft={draftFor(id)} busy={busy} onEdit={edit} onMove={(position, delta) => setOrderedIds(move(ids, position, delta))} />)}</div>
@@ -243,7 +241,6 @@ function ProductList({ initial, categories, revision, onUpdated, partnerModeEnab
     catch (cause) { setError(errorMessage(cause)) } finally { setBusy(false) }
   }
   return <>
-    <p className="admin-panel-footnote">下架后，前台商品卡片和详情页将隐藏，新的直接购买会被拒绝；已有订单仍可处理。拖动商品左侧的排序柄调整位置后请保存排序。新增商品需先接入套餐、下单与交付流程。</p>
     <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis]} onDragEnd={finishDrag}>
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         <div className="direct-admin-list">{ids.map(id => {

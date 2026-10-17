@@ -1238,11 +1238,7 @@ export default function CustomerManagement({
               <Users className="size-5 text-primary" />
               {admin ? '客户管理中心' : '我的客户管理'}
             </CardTitle>
-            <CardDescription className="mt-1">
-              {admin
-                ? '全站客户档案与会员账号集中管理，支持按渠道代理筛选、开通跟踪及多工作表 Excel 导出。'
-                : '自主管理所属客户的会员账号、开通续费记录与到期提醒，全流程清晰可查。'}
-            </CardDescription>
+            {!admin && <CardDescription className="mt-1">自主管理所属客户的会员账号、开通续费记录与到期提醒，全流程清晰可查。</CardDescription>}
           </div>
 
           <div className="crm-header-actions">
@@ -1251,18 +1247,20 @@ export default function CustomerManagement({
               disabled={exporting || loading || !data?.total}
               onClick={() => void exportExcel()}
               className="gap-1.5"
+              aria-label={exporting ? '正在生成 Excel' : '导出 Excel'}
             >
               <Download className="size-4" />
-              {exporting ? '正在生成 Excel…' : '导出 Excel'}
+              <span className="crm-action-label">{exporting ? '正在生成 Excel…' : '导出 Excel'}</span>
             </Button>
 
             <Button
               onClick={() => setCreateOpen(true)}
               disabled={!data}
               className="gap-1.5"
+              aria-label="添加客户"
             >
               <Plus className="size-4" />
-              添加客户
+              <span className="crm-action-label">添加客户</span>
             </Button>
           </div>
         </CardHeader>
@@ -1726,11 +1724,6 @@ export default function CustomerManagement({
             )}
           </Card>
 
-          {/* Footnote */}
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            💡 <strong>系统说明：</strong>
-            统计按已应用的筛选计算。实付金额为手动录入，包含历次开通、续费和升级。到期按开通时间加一个自然月计算，不支持提前续费。Excel 导出包含客户、全部账号及完整历史。
-          </p>
         </>
       )}
 

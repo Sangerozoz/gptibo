@@ -16,16 +16,19 @@
 .crm-header-row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
+
+.crm-header-row > div:first-child { min-width: 0; }
 
 .crm-header-actions {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  flex-wrap: wrap;
+  flex: none;
+  flex-wrap: nowrap;
 }
 
 /* KPI Metrics Grid */
@@ -356,19 +359,16 @@
   .crm-account-metrics-grid {
     grid-template-columns: 1fr;
   }
-  .crm-header-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .crm-header-actions {
-    justify-content: flex-start;
-  }
 }
 
 @media (max-width: 480px) {
   .crm-metrics-grid {
     grid-template-columns: 1fr;
   }
+  .crm-header-row { gap: 0.5rem; }
+  .crm-header-actions { gap: 0.25rem; }
+  .crm-header-actions button { width: 2rem; height: 2rem; padding: 0; }
+  .crm-action-label { display: none; }
 }
 .crm-metric-action { position:absolute; inset:0; z-index:1; width:100%; height:100%; border-radius:inherit; background:transparent; }
 .crm-metric-action:hover { background:transparent; }

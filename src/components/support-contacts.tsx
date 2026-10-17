@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { ArrowRight, Check, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { CopyButton } from '@/components/copy-button'
 import { Feedback } from '@/components/workspace-loading'
@@ -46,7 +46,7 @@ function ContactsForm({ endpoint, settings, loading, readOnly, onSaved, onEditin
     <FieldGroup>
       <Field><FieldLabel htmlFor="support-wechat">微信</FieldLabel><Input id="support-wechat" value={contacts.wechat} onChange={e => edit('wechat', e.target.value)} maxLength={64} autoComplete="off" placeholder="微信号（可留空）" disabled={busy || readOnly} /><ContactQrInput label="微信" url={contacts.wechatQrUrl} busy={busy} readOnly={readOnly} onUpload={file => uploadQr('wechat', file)} onRemove={() => removeQr('wechat')} /></Field>
       <Field><FieldLabel htmlFor="support-qq">QQ</FieldLabel><Input id="support-qq" value={contacts.qq} onChange={e => edit('qq', e.target.value)} maxLength={20} inputMode="numeric" autoComplete="off" placeholder="QQ 号（可留空）" disabled={busy || readOnly} /><ContactQrInput label="QQ" url={contacts.qqQrUrl} busy={busy} readOnly={readOnly} onUpload={file => uploadQr('qq', file)} onRemove={() => removeQr('qq')} /></Field>
-      <Field><FieldLabel htmlFor="support-email">联系邮箱</FieldLabel><Input id="support-email" type="email" value={contacts.email} onChange={e => edit('email', e.target.value)} maxLength={254} autoComplete="off" placeholder="用于客户咨询的邮箱" disabled={busy || readOnly} /><FieldDescription>微信、QQ 可只填写账号或只上传二维码。留空的联系方式不会显示。</FieldDescription></Field>
+      <Field><FieldLabel htmlFor="support-email">联系邮箱</FieldLabel><Input id="support-email" type="email" value={contacts.email} onChange={e => edit('email', e.target.value)} maxLength={254} autoComplete="off" placeholder="用于客户咨询的邮箱" disabled={busy || readOnly} /></Field>
     </FieldGroup>
     <Feedback error={error} />
     {!readOnly && <Button type="submit" disabled={busy || loading || !changed}>{busy ? '保存中…' : '保存联系方式'}</Button>}
@@ -57,7 +57,7 @@ function ContactQrInput({ label, url, busy, readOnly, onUpload, onRemove }: { la
   return <div className="support-qr-input"><ImageUploadField name={`${label}二维码`} url={url} busy={busy} readOnly={readOnly} onUpload={file => void onUpload(file)} onRemove={onRemove} /></div>
 }
 
-export function SupportContactsPanel({ endpoint, revision = 0, title = '平台联系方式', description = '显示在平台商店的“联系支持”中。', readOnly = false, onSummaryChange }: { endpoint: string; revision?: number; title?: string; description?: string; readOnly?: boolean; onSummaryChange?: (summary: string) => void }) {
+export function SupportContactsPanel({ endpoint, revision = 0, title = '平台联系方式', description, readOnly = false, onSummaryChange }: { endpoint: string; revision?: number; title?: string; description?: string; readOnly?: boolean; onSummaryChange?: (summary: string) => void }) {
   const [localRevision, setLocalRevision] = useState(0); const [message, setMessage] = useState('')
   const { data, error, loading } = useResource<SupportContactsSettings>(endpoint, revision + localRevision)
   useEffect(() => {
@@ -66,7 +66,7 @@ export function SupportContactsPanel({ endpoint, revision = 0, title = '平台�
   }, [data, error, onSummaryChange])
   return <section className="admin-panel support-settings-panel">
     <div className="admin-panel-title"><h2>{title}</h2><Button type="button" variant="ghost" size="icon" aria-label="刷新联系方式" disabled={loading} onClick={() => { setMessage(''); setLocalRevision(value => value + 1) }}><RefreshCw size={15} /></Button></div>
-    <p className="support-settings-description">{description}</p>
+    {description && <p className="support-settings-description">{description}</p>}
     <Feedback error={error} loading={loading} data={data} shape="compact" />
     {data && <ContactsForm key={endpoint + ':' + data.version} endpoint={endpoint} settings={data} loading={loading} readOnly={readOnly} onEditing={() => setMessage('')} onSaved={() => { setMessage('联系方式已保存'); setLocalRevision(value => value + 1) }} />}
     {message && <p className="support-settings-success" role="status"><Check size={14} />{message}</p>}
