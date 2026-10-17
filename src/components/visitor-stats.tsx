@@ -268,9 +268,6 @@ export function VisitorStats({
               </div>
             )}
           </div>
-          <p className="visitor-footnote">
-            图表按北京时间逐日去重；顶部独立访客在整个所选时段内去重，浏览多个页面计入浏览量。
-          </p>
         </CardContent>
       )}
     </Card>

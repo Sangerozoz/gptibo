@@ -9,7 +9,6 @@
 .admin-overview-charts .visitor-kpi-label { gap:4px; font-size:10px; }
 .admin-overview-charts .visitor-kpi-label>svg { display:none; }
 .admin-overview-charts .visitor-chart-wrapper { padding-inline:16px; }
-.admin-overview-charts .visitor-footnote { padding-inline:20px; }
 .partner-ranking-chart { display:flex; flex-direction:column; }
 .partner-ranking-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:18px 20px; min-height:91px; border-bottom:1px solid var(--border); }
 .partner-ranking-heading h2 { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:550; letter-spacing:-.2px; }
