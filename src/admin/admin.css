@@ -36,7 +36,6 @@
 .admin-summary span { font-size:11px; color:var(--muted-foreground); }
 .admin-summary strong { font-size:20px; font-weight:500; }
 .admin-summary small { font-size:11px; margin-left:6px; color:var(--muted-foreground); }
-.admin-summary>p { grid-column:1/-1; font-size:11px; color:var(--muted-foreground); }
 .admin-panel { border:1px solid var(--border); border-radius:14px; background:var(--card); overflow:hidden; margin-bottom:24px; }
 .admin-panel-title { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:66px; padding:14px 22px; border-bottom:1px solid var(--border); }
 .admin-panel-title h2 { font-size:15px; font-weight:550; }
